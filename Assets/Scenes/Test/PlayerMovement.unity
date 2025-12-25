@@ -166,7 +166,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c656c1d2f8b1ea4b87df8746c2bd77b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.PlayerCam
-  cam: {fileID: 0}
+  cam: {fileID: 1105642144}
+  look: {fileID: 7526223612302542626, guid: 25cc589a441cb6c4db459629c529c421, type: 3}
 --- !u!114 &898869967
 MonoBehaviour:
   m_ObjectHideFlags: 0

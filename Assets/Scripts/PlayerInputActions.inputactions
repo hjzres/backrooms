@@ -19,7 +19,7 @@
                     "name": "Camera",
                     "type": "Value",
                     "id": "46b6c4c2-3998-4b63-868d-4d57c4be2f19",
-                    "expectedControlType": "",
+                    "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
