@@ -3789,7 +3789,7 @@
     "m_Value": 0.05000000074505806,
     "m_FloatType": 1,
     "m_RangeValues": {
-        "x": 0.004999999888241291,
+        "x": 0.0,
         "y": 0.07999999821186066
     },
     "m_SliderType": 0,
@@ -5131,7 +5131,7 @@
     "m_Title": "Triplanar Mapping",
     "m_Position": {
         "x": -5099.0,
-        "y": 475.0000305175781
+        "y": 475.0
     }
 }
 
@@ -5876,7 +5876,7 @@
     "m_ObjectId": "8273deef485a48f5a12dec26f9f774f4",
     "m_Title": "Normal Texture",
     "m_Position": {
-        "x": -2107.999755859375,
+        "x": -2108.0,
         "y": 654.0
     }
 }
@@ -8883,7 +8883,7 @@
     "m_Title": "UV Handling",
     "m_Position": {
         "x": -4319.0,
-        "y": -87.99996948242188
+        "y": -88.0
     }
 }
 
@@ -9279,8 +9279,8 @@
     "m_ObjectId": "e9be0b00e7954d31a562f2ddc732b1e0",
     "m_Title": "Parallax Mapping",
     "m_Position": {
-        "x": -3485.999755859375,
-        "y": 467.9999694824219
+        "x": -3486.0,
+        "y": 468.0
     }
 }
 

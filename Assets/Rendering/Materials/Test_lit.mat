@@ -129,7 +129,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Height_Amplitude: 0.005
+    - _Height_Amplitude: 0
     - _LOD: 2
     - _LOD_Threshold: 3
     - _Metallic: 0
