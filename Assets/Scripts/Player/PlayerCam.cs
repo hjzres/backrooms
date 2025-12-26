@@ -8,40 +8,42 @@ namespace Player
         [SerializeField] Camera cam;
         [SerializeField] private float sens;
 
-        private float xRotation;
-        private float yRotation;
-        [SerializeField] InputActionReference lookaction;
-        private InputAction look;
+        private float _xRotation;
+        private float _yRotation;
+        private PlayerInput _playerInput;
+        private InputAction _deltaMouse;
         void Awake()
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
-            look = lookaction.action;
+            _playerInput = GetComponent<PlayerInput>();
+
+            _deltaMouse = _playerInput.actions["Camera"];
         }
 
         void OnEnable()
         {
-            look.Enable();
+            _deltaMouse.Enable();
         }
 
         void OnDisable()
         {
-            look.Disable();
+            _deltaMouse.Disable();
         }
 
         void Update()
         {
-            Vector2 looking = look.ReadValue<Vector2>();
+            Vector2 mouse = _deltaMouse.ReadValue<Vector2>();
 
-            float mouseX = looking.x * Time.deltaTime * sens;
-            float mouseY = looking.y * Time.deltaTime * sens;
+            float mouseX = mouse.x * Time.deltaTime * sens;
+            float mouseY = mouse.y * Time.deltaTime * sens;
 
-            yRotation += mouseX;
-            xRotation -= mouseY;
-            xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+            _yRotation += mouseX;
+            _xRotation -= mouseY;
+            _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
 
-            transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+            transform.rotation = Quaternion.Euler(_xRotation, _yRotation, 0);
         }
     }
 }
