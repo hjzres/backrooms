@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.PlayerCam
   cam: {fileID: 1105642144}
-  look: {fileID: 7526223612302542626, guid: 25cc589a441cb6c4db459629c529c421, type: 3}
+  lookaction: {fileID: 7526223612302542626, guid: 25cc589a441cb6c4db459629c529c421, type: 3}
 --- !u!114 &898869967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,7 +209,7 @@ MonoBehaviour:
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 1105642144}
 --- !u!1 &918502691
 GameObject:
   m_ObjectHideFlags: 0

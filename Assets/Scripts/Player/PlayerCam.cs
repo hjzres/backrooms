@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,11 +10,25 @@ namespace Player
 
         private float xRotation;
         private float yRotation;
-        [SerializeField] InputActionReference look;
+        [SerializeField] InputActionReference lookaction;
+        private InputAction look;
         void Awake()
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            look = lookaction.action;
+            look.Enable();
+        }
+
+        void OnEnable()
+        {
+            look.Enable();
+        }
+
+        void OnDisable()
+        {
+            look.Disable();
         }
 
         void Update()
@@ -29,7 +42,9 @@ namespace Player
 
             // transform.rotation = Quaternion.Euler(0, yRotation, 0);
 
-            print(look.action.ReadValue<Vector2>());
+            Vector2 looking = look.ReadValue<Vector2>();
+            if(looking != Vector2.zero)
+            Debug.Log(looking);
         }
     }
 }
