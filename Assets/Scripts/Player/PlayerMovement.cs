@@ -22,11 +22,18 @@ public class PlayerMovement : MonoBehaviour
         _inputAction = _playerInput.actions["Movement"];
     }
 
+    void OnEnable()
+    {
+        _inputAction.Enable();
+    }
+
     void Update()
     {
         _moveDirection = new Vector3(_inputAction.ReadValue<Vector2>().x, 0, _inputAction.ReadValue<Vector2>().y);
+    }
 
-        print(_moveDirection);
+    void FixedUpdate()
+    {
         _rb.AddForce(_moveDirection * 10f * moveSpeed, ForceMode.Force);
     }
 }
