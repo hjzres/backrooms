@@ -167,6 +167,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.PlayerCam
   cam: {fileID: 1105642144}
+  sens: 5
   lookaction: {fileID: 7526223612302542626, guid: 25cc589a441cb6c4db459629c529c421, type: 3}
 --- !u!114 &898869967
 MonoBehaviour:
