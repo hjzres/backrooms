@@ -39,6 +39,11 @@ public class PlayerMovement : MonoBehaviour
         _inputAction.Enable();
     }
 
+    void OnDisable()
+    {
+        _inputAction.Disable();
+    }
+
     void Update()
     {
         _moveDirection = transform.forward * _inputAction.ReadValue<Vector2>().x + transform.right * _inputAction.ReadValue<Vector2>().y;
