@@ -17,6 +17,8 @@ namespace Player
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
+            transform.rotation = Quaternion.Euler(0, 0, 0);
+
             _playerInput = GetComponent<PlayerInput>();
 
             _deltaMouse = _playerInput.actions["Camera"];
