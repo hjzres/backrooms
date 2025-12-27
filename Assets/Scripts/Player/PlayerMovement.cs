@@ -10,29 +10,30 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody _rb;
 
     // Properties
+    [Header("Move")]
     [SerializeField] float moveSpeed;
     private Vector3 _moveDirection;
     [SerializeField] float groundDrag;
 
-    // Jump
+    [Header("Jump")]
     [SerializeField] float jumpForce;
     [SerializeField] float jumpCooldown;
     [SerializeField] float airMultiplier;
-    [SerializeField] bool readyToJump;
+    bool _readyToJump;
 
     // Input
     private PlayerInput _playerInput;
     private InputAction _moveAction;
     private InputAction _jumpAction;
 
-    // Ground Check
-    private bool _isGrounded;
+    [Header("Ground")]
     [SerializeField] float playerHeight;
     [SerializeField] LayerMask whatIsGround;
+    private bool _isGrounded;
 
     void Awake()
     {
-        readyToJump = true;
+        _readyToJump = true;
 
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
@@ -68,9 +69,9 @@ public class PlayerMovement : MonoBehaviour
 
         print(_jumpAction.IsPressed());
         
-        if(_jumpAction.IsPressed() && readyToJump && _isGrounded)
+        if(_jumpAction.IsPressed() && _readyToJump && _isGrounded)
         {
-            readyToJump = false;
+            _readyToJump = false;
 
             Jump();
 
@@ -95,6 +96,6 @@ public class PlayerMovement : MonoBehaviour
 
     void ResetJump()
     {
-        readyToJump = true;
+        _readyToJump = true;
     }
 }
