@@ -10,7 +10,7 @@ namespace Player
 
         private float _xRotation;
         private float _yRotation;
-        private PlayerInput _playerInput;
+        private PlayerInputHandler _inputHandler;
         private InputAction _deltaMouse;
         void Awake()
         {
@@ -19,24 +19,22 @@ namespace Player
 
             transform.rotation = Quaternion.Euler(0, 0, 0);
 
-            _playerInput = GetComponent<PlayerInput>();
-
-            _deltaMouse = _playerInput.actions["Camera"];
+            _inputHandler = GetComponent<PlayerInputHandler>();
         }
 
         void OnEnable()
         {
-            _deltaMouse.Enable();
+            // _deltaMouse.Enable();
         }
 
         void OnDisable()
         {
-            _deltaMouse.Disable();
+            // _deltaMouse.Disable();
         }
 
         void Update()
         {
-            Vector2 mouse = _deltaMouse.ReadValue<Vector2>();
+            Vector2 mouse = _inputHandler.Camera.ReadValue<Vector2>();
 
             float mouseX = mouse.x * Time.deltaTime * sens;
             float mouseY = mouse.y * Time.deltaTime * sens;

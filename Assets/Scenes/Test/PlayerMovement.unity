@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 898869965}
   - component: {fileID: 898869969}
   - component: {fileID: 898869967}
+  - component: {fileID: 898869970}
   - component: {fileID: 898869966}
   - component: {fileID: 898869968}
   m_Layer: 0
@@ -183,7 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
   m_Actions: {fileID: -944628639613478452, guid: 25cc589a441cb6c4db459629c529c421, type: 3}
-  m_NotificationBehavior: 2
+  m_NotificationBehavior: 3
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
     m_PersistentCalls:
@@ -224,7 +225,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d8ddc2fece56c84fa49bf9c428d72e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  moveSpeed: 5
+  moveSpeed: 2
+  groundDrag: 5
+  playerHeight: 2
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!54 &898869969
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -252,6 +258,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &898869970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 898869964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93296630d37106846bdc14a22f7c678b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
+  playerInput: {fileID: 0}
 --- !u!1 &918502691
 GameObject:
   m_ObjectHideFlags: 0
@@ -641,7 +660,7 @@ GameObject:
   - component: {fileID: 1651782731}
   - component: {fileID: 1651782730}
   - component: {fileID: 1651782729}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}

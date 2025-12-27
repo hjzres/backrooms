@@ -137,6 +137,22 @@
                     "isOR": false
                 }
             ]
+        },
+        {
+            "name": "KB & Mouse",
+            "bindingGroup": "KB & Mouse",
+            "devices": [
+                {
+                    "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
+                },
+                {
+                    "devicePath": "<Mouse>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
         }
     ]
 }

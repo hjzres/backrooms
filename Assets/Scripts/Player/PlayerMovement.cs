@@ -15,7 +15,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float groundDrag;
 
     // Input
-    private PlayerInput _playerInput;
+    private PlayerInputHandler _inputHandler;
     private InputAction _inputAction;
 
     // Ground Check
@@ -25,37 +25,41 @@ public class PlayerMovement : MonoBehaviour
 
     void Awake()
     {
-
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
 
-        _playerInput = GetComponent<PlayerInput>();
-
-        _inputAction = _playerInput.actions["Movement"];
+        _inputHandler = GetComponent<PlayerInputHandler>();
     }
 
     void OnEnable()
     {
-        _inputAction.Enable();
+        // _inputAction.Enable();
     }
 
     void OnDisable()
     {
-        _inputAction.Disable();
+        // _inputAction.Disable();
     }
 
     void Update()
     {
-        _moveDirection = transform.forward * _inputAction.ReadValue<Vector2>().x + transform.right * _inputAction.ReadValue<Vector2>().y;
+        Vector2 inputVector = _inputHandler.Movement.ReadValue<Vector2>();
+        _moveDirection = - transform.forward * inputVector.x + transform.right * inputVector.y;
 
         print(_moveDirection);
 
-        // _isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        _isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
-        // if (_isGrounded)
-        //     _rb.linearDamping = groundDrag;
-        // else
-        //     _rb.linearDamping = 0;
+        if (_isGrounded)
+            _rb.linearDamping = groundDrag;
+        else
+            _rb.linearDamping = 0;
+
+        if(_rb.linearVelocity.magnitude > moveSpeed)
+        {
+            Vector3 limitedVelocity = _rb.linearVelocity.normalized * moveSpeed;
+            _rb.linearVelocity = new Vector3(limitedVelocity.x, _rb.linearVelocity.y, limitedVelocity.z);
+        }
     }
 
     void FixedUpdate()
