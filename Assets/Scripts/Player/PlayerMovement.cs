@@ -12,6 +12,7 @@ public class PlayerMovement : MonoBehaviour
     // Properties
     [Header("Move")]
     [SerializeField] float moveSpeed;
+    [SerializeField] float stamina;
     private Vector3 _moveDirection;
     [SerializeField] float groundDrag;
 
@@ -34,6 +35,8 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         _readyToJump = true;
+
+        stamina = 100f;
 
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
