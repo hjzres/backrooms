@@ -12,7 +12,29 @@ public class PlayerMovement : MonoBehaviour
     // Properties
     [Header("Move")]
     [SerializeField] float moveSpeed;
+    [SerializeField] float runSpeedMultiplier;
     [SerializeField] float stamina;
+    float Stamina
+    {
+        get { return stamina; }
+        set
+        {
+            if (value < 0)
+            {
+                stamina = 0;
+            }
+            else if (value > _maxStamina)
+            {
+                stamina = _maxStamina;
+            } else {
+                stamina = value;
+            }
+        }
+    }
+    private float _maxStamina;
+    [SerializeField] float staminaIncreaseRate;
+    [SerializeField] float staminaDecreaseRate;
+    [SerializeField] float staminaCooldown;
     private Vector3 _moveDirection;
     [SerializeField] float groundDrag;
 
@@ -26,6 +48,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerInput _playerInput;
     private InputAction _moveAction;
     private InputAction _jumpAction;
+    private InputAction _runAction;
 
     [Header("Ground")]
     [SerializeField] float playerHeight;
@@ -34,9 +57,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Awake()
     {
+        _maxStamina = 100f;
+        Stamina = _maxStamina;
+        
         _readyToJump = true;
 
-        stamina = 100f;
+        Stamina = 100f;
 
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
@@ -45,6 +71,7 @@ public class PlayerMovement : MonoBehaviour
 
         _moveAction = _playerInput.actions["Movement"];
         _jumpAction = _playerInput.actions["Jump"];
+        _runAction = _playerInput.actions["Run"];
     }
 
     void OnEnable()
@@ -71,8 +98,8 @@ public class PlayerMovement : MonoBehaviour
             _rb.linearDamping = 0;
 
         print(_jumpAction.IsPressed());
-        
-        if(_jumpAction.IsPressed() && _readyToJump && _isGrounded)
+
+        if (_jumpAction.IsPressed() && _readyToJump && _isGrounded)
         {
             _readyToJump = false;
 
@@ -80,12 +107,20 @@ public class PlayerMovement : MonoBehaviour
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
+
+        if (stamina > 0)
+            StaminaControl();
+        else
+            Invoke(nameof(StaminaControl), staminaCooldown);
     }
 
     void FixedUpdate()
     {
         if (_isGrounded)
-            _rb.AddForce(_moveDirection * 10f * moveSpeed, ForceMode.Force);
+            if(_runAction.IsPressed() && Stamina > 0)
+                _rb.AddForce(_moveDirection * 10f * moveSpeed * runSpeedMultiplier, ForceMode.Force);
+            else
+                _rb.AddForce(_moveDirection * 10f * moveSpeed, ForceMode.Force);
         else
             _rb.AddForce(_moveDirection * 10f * moveSpeed * airMultiplier, ForceMode.Force);
     }
@@ -100,5 +135,16 @@ public class PlayerMovement : MonoBehaviour
     void ResetJump()
     {
         _readyToJump = true;
+    }
+
+    void StaminaControl()
+    {
+        if (_runAction.IsPressed() && Stamina > 0)
+        {
+            Stamina -= staminaDecreaseRate;
+        } else
+        {
+            Stamina += staminaIncreaseRate;
+        }
     }
 }

@@ -225,6 +225,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 5
+  runSpeedMultiplier: 3
+  stamina: 100
+  staminaIncreaseRate: 0.2
+  staminaDecreaseRate: 0.2
+  staminaCooldown: 2
   groundDrag: 5
   jumpForce: 6
   jumpCooldown: 0.25
