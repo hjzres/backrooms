@@ -230,7 +230,7 @@ MonoBehaviour:
   playerHeight: 2
   whatIsGround:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
 --- !u!54 &898869969
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -270,7 +270,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93296630d37106846bdc14a22f7c678b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
-  playerInput: {fileID: 0}
+  playerInput: {fileID: 898869967}
 --- !u!1 &918502691
 GameObject:
   m_ObjectHideFlags: 0
