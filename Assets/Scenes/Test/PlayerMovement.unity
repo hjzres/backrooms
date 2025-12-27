@@ -224,11 +224,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d8ddc2fece56c84fa49bf9c428d72e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  moveSpeed: 2
+  moveSpeed: 5
   groundDrag: 5
-  jumpForce: 12
+  jumpForce: 6
   jumpCooldown: 0.25
-  airMultiplier: 0.4
+  airMultiplier: 0.2
   readyToJump: 0
   playerHeight: 2
   whatIsGround:
