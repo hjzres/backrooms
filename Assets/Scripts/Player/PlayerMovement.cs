@@ -62,8 +62,6 @@ public class PlayerMovement : MonoBehaviour
         
         _readyToJump = true;
 
-        Stamina = 100f;
-
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
 
@@ -88,16 +86,11 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        _moveDirection = -transform.forward * _moveAction.ReadValue<Vector2>().x + transform.right * _moveAction.ReadValue<Vector2>().y;
-
         _isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
-        if (_isGrounded)
-            _rb.linearDamping = groundDrag;
-        else
-            _rb.linearDamping = 0;
+        _moveDirection = -transform.forward * _moveAction.ReadValue<Vector2>().x + transform.right * _moveAction.ReadValue<Vector2>().y;
 
-        print(_jumpAction.IsPressed());
+        DragControl();
 
         if (_jumpAction.IsPressed() && _readyToJump && _isGrounded)
         {
@@ -137,12 +130,21 @@ public class PlayerMovement : MonoBehaviour
         _readyToJump = true;
     }
 
+    void DragControl()
+    {
+        if (_isGrounded)
+            _rb.linearDamping = groundDrag;
+        else
+            _rb.linearDamping = 0;
+    }
+
     void StaminaControl()
     {
         if (_runAction.IsPressed() && Stamina > 0)
         {
             Stamina -= staminaDecreaseRate;
-        } else
+        }
+        else
         {
             Stamina += staminaIncreaseRate;
         }
