@@ -8,16 +8,13 @@ namespace Player
         [SerializeField] Camera cam;
         [SerializeField] private float sens;
 
-        private float _xRotation;
-        private float _yRotation;
+        private float _xRotation, _yRotation;
         private PlayerInput _playerInput;
         private InputAction _deltaMouse;
         void Awake()
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-
-            transform.rotation = Quaternion.Euler(0, 0, 0);
 
             _playerInput = GetComponent<PlayerInput>();
 
@@ -46,7 +43,7 @@ namespace Player
             _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
 
             transform.rotation = Quaternion.Euler(0, _yRotation, 0);
-            cam.transform.rotation = Quaternion.Euler(_xRotation, _yRotation, 0);
+            cam.transform.rotation = Quaternion.Euler(_xRotation, _yRotation + 90f, 0);
         }
     }
 }
