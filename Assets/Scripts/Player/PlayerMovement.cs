@@ -14,9 +14,16 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _moveDirection;
     [SerializeField] float groundDrag;
 
+    // Jump
+    [SerializeField] float jumpForce;
+    [SerializeField] float jumpCooldown;
+    [SerializeField] float airMultiplier;
+    [SerializeField] bool readyToJump;
+
     // Input
     private PlayerInput _playerInput;
-    private InputAction _inputAction;
+    private InputAction _moveAction;
+    private InputAction _jumpAction;
 
     // Ground Check
     private bool _isGrounded;
@@ -25,30 +32,32 @@ public class PlayerMovement : MonoBehaviour
 
     void Awake()
     {
+        readyToJump = true;
 
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
 
         _playerInput = GetComponent<PlayerInput>();
 
-        _inputAction = _playerInput.actions["Movement"];
+        _moveAction = _playerInput.actions["Movement"];
+        _jumpAction = _playerInput.actions["Jump"];
     }
 
     void OnEnable()
     {
-        _inputAction.Enable();
+        _moveAction.Enable();
+        _jumpAction.Enable();
     }
 
     void OnDisable()
     {
-        _inputAction.Disable();
+        _moveAction.Disable();
+        _jumpAction.Disable();
     }
 
     void Update()
     {
-        _moveDirection = -transform.forward * _inputAction.ReadValue<Vector2>().x + transform.right * _inputAction.ReadValue<Vector2>().y;
-
-        print(_moveDirection);
+        _moveDirection = -transform.forward * _moveAction.ReadValue<Vector2>().x + transform.right * _moveAction.ReadValue<Vector2>().y;
 
         _isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
@@ -56,10 +65,36 @@ public class PlayerMovement : MonoBehaviour
             _rb.linearDamping = groundDrag;
         else
             _rb.linearDamping = 0;
+
+        print(_jumpAction.IsPressed());
+        
+        if(_jumpAction.IsPressed() && readyToJump && _isGrounded)
+        {
+            readyToJump = false;
+
+            Jump();
+
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
     }
 
     void FixedUpdate()
     {
-        _rb.AddForce(_moveDirection * 10f * moveSpeed, ForceMode.Force);
+        if (_isGrounded)
+            _rb.AddForce(_moveDirection * 10f * moveSpeed, ForceMode.Force);
+        else
+            _rb.AddForce(_moveDirection * 10f * moveSpeed * airMultiplier, ForceMode.Force);
+    }
+
+    void Jump()
+    {
+        _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z);
+
+        _rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+    }
+
+    void ResetJump()
+    {
+        readyToJump = true;
     }
 }
