@@ -1,9 +1,10 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Player
 {
-    public class PlayerCam : MonoBehaviour
+    public class PlayerCam : NetworkBehaviour
     {
         [SerializeField] Camera cam;
         [SerializeField] private float sens;
@@ -13,6 +14,7 @@ namespace Player
         private InputAction _deltaMouse;
         void Awake()
         {
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
@@ -20,6 +22,11 @@ namespace Player
 
             _deltaMouse = _playerInput.actions["Camera"];
         }
+
+        // public override void OnNetworkSpawn()
+        // {
+        //     if (!IsOwner) cam.enabled = false;
+        // }
 
         void OnEnable()
         {
@@ -33,6 +40,8 @@ namespace Player
 
         void Update()
         {
+            if (!IsOwner) return;
+
             Vector2 mouse = _deltaMouse.ReadValue<Vector2>();
 
             float mouseX = mouse.x * Time.deltaTime * sens;

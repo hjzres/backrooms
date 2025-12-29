@@ -1,10 +1,11 @@
+using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     // Components
     private Rigidbody _rb;
@@ -74,18 +75,24 @@ public class PlayerMovement : MonoBehaviour
 
     void OnEnable()
     {
+        if (!IsOwner) return;
+
         _moveAction.Enable();
         _jumpAction.Enable();
     }
 
     void OnDisable()
     {
+        if (!IsOwner) return;
+
         _moveAction.Disable();
         _jumpAction.Disable();
     }
 
     void Update()
     {
+        if (!IsOwner) return;
+
         _isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
         _moveDirection = -transform.forward * _moveAction.ReadValue<Vector2>().x + transform.right * _moveAction.ReadValue<Vector2>().y;
@@ -109,6 +116,8 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (!IsOwner) return;
+
         if (_isGrounded)
             if(_runAction.IsPressed() && Stamina > 0)
                 _rb.AddForce(_moveDirection * 10f * moveSpeed * runSpeedMultiplier, ForceMode.Force);
