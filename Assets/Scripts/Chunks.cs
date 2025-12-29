@@ -1,11 +1,14 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
     public class Chunks
     {
         public static int clientDistanceInChunks = 3;
+
+        public static float distanceThreshold = 100f;
 
         public class SquareChunk
         {
@@ -23,12 +26,14 @@ namespace Assets.Scripts
 
             public GameObject gameObject;
 
-            public SquareChunk(Vector2 position, int length, int resolution)
+            private readonly Action<SquareChunk> onCreate;
+
+            public SquareChunk(Vector2 position, int length, int resolution, Action<SquareChunk> onCreate)
             {
                 Mesh mesh = new Mesh();
                 GameObject gameObject = new GameObject("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
                 
-                // Offset position to center chunk relative to (0, 0, 0).
+                // Offset position to center chunk.
                 gameObject.transform.position = new Vector3(position.x - length * 0.5f, 0, position.y - length * 0.5f);
 
                 Vector3[] vertices = new Vector3[(resolution + 1) * (resolution + 1)];
@@ -56,6 +61,9 @@ namespace Assets.Scripts
                 mesh.normals = normals;
 
                 gameObject.GetComponent<MeshFilter>().mesh = mesh;
+
+                this.onCreate = onCreate;
+                onCreate?.Invoke(this);
             }
 
             private void GenerateNonTriangularConstituents(float spacingBetweenVertices)
@@ -97,41 +105,6 @@ namespace Assets.Scripts
                     vert++;
                 }
             }
-        }
-
-        public static void UpdateClientChunks(Dictionary<Vector3, SquareChunk> squareChunks, Vector3 clientPosition, int chunkLength, Material chunkMaterial)
-        {
-            Vector2 clientChunkCoord = ComputeCliendChunkCoords(clientPosition, chunkLength);
-
-            for (int x = -clientDistanceInChunks; x <= clientDistanceInChunks; x++)
-            {
-                for (int y = -clientDistanceInChunks; y <= clientDistanceInChunks; y++)
-                {
-                    Vector2 coordinates = new Vector2(clientChunkCoord.x + x, clientChunkCoord.y + y);
-
-                    if (!squareChunks.ContainsKey(new Vector3(coordinates.x, 0, coordinates.y)))
-                    {
-                        Vector2 chunkPosition = coordinates * chunkLength;
-                        SquareChunk chunk = new SquareChunk(chunkPosition, chunkLength, 1);
-                        chunk.gameObject.GetComponent<MeshRenderer>().material = chunkMaterial;
-
-                        squareChunks.Add(new Vector3(coordinates.x, 0, coordinates.y), chunk);
-                    }
-                }
-            }
-        }
-
-        private static Vector2 ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
-        {
-            float operationX = clientPosition.x / (chunkLength * 0.5f);
-            float operationY = clientPosition.z / (chunkLength * 0.5f);
-
-            if (clientPosition.x < 0)
-            {
-                return new Vector2(Mathf.CeilToInt(operationX), Mathf.CeilToInt(operationY));
-            }
-
-            return new Vector2(Mathf.FloorToInt(operationX), Mathf.FloorToInt(operationY));
         }
     }
 }
