@@ -39,7 +39,6 @@ namespace Player
 
         void Update()
         {
-            print(IsOwner);
             if (!IsOwner)
             {
                 cam.gameObject.SetActive(false);
