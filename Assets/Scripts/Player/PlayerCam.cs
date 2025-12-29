@@ -14,7 +14,6 @@ namespace Player
         private InputAction _deltaMouse;
         void Awake()
         {
-
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
@@ -40,7 +39,13 @@ namespace Player
 
         void Update()
         {
-            if (!IsOwner) return;
+            print(IsOwner);
+            if (!IsOwner)
+            {
+                cam.gameObject.SetActive(false);
+                enabled = false;
+                return;
+            }
 
             Vector2 mouse = _deltaMouse.ReadValue<Vector2>();
 
