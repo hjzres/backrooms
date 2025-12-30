@@ -22,10 +22,15 @@ namespace Player
             _deltaMouse = _playerInput.actions["Camera"];
         }
 
-        // public override void OnNetworkSpawn()
-        // {
-        //     if (!IsOwner) cam.enabled = false;
-        // }
+        void Start()
+        {
+            if (!IsOwner)
+            {
+                cam.gameObject.SetActive(false);
+                enabled = false;
+                return;
+            }
+        }
 
         void OnEnable()
         {
@@ -39,13 +44,6 @@ namespace Player
 
         void Update()
         {
-            if (!IsOwner)
-            {
-                cam.gameObject.SetActive(false);
-                enabled = false;
-                return;
-            }
-
             Vector2 mouse = _deltaMouse.ReadValue<Vector2>();
 
             float mouseX = mouse.x * Time.deltaTime * sens;
