@@ -24,6 +24,8 @@ namespace Assets.Scripts
 
             public int resolution;
 
+            public int length;
+
             public GameObject gameObject;
 
             private readonly Action<SquareChunk> onCreate;
@@ -43,6 +45,7 @@ namespace Assets.Scripts
 
                 this.position = position;
                 this.resolution = resolution;
+                this.length = length;
 
                 this.vertices = vertices;
                 this.normals = normals;
