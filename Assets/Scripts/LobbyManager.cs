@@ -23,7 +23,7 @@ namespace Assets.Scripts
 
         [Header("Maze Properties")]
 
-        [SerializeField] private int segments = 3;
+        [SerializeField] private int segments = 2;
 
         private void Awake()
         {
@@ -36,10 +36,9 @@ namespace Assets.Scripts
             UpdateClientChunks();
         }
 
-        private void A()
+        private void GenerateLobbyMaze(SquareChunk chunk)
         {
-            int num = Random.Range(0, 10);
-            Debug.Log(num);
+            
         }
 
         private void UpdateClientChunks()
@@ -55,7 +54,7 @@ namespace Assets.Scripts
                     if (!squareChunks.ContainsKey(new Vector3(coordinates.x, 0, coordinates.y)))
                     {
                         Vector2 chunkPosition = coordinates * meshLength;
-                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { A(); });
+                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyMaze(chunk); });
                         chunk.gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
 
                         squareChunks.Add(new Vector3(coordinates.x, 0, coordinates.y), chunk);
@@ -69,7 +68,7 @@ namespace Assets.Scripts
             }
         }
 
-        private static Vector2 ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
+        private Vector2 ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
         {
             float operationX = clientPosition.x / (chunkLength);
             float operationY = clientPosition.z / (chunkLength);
@@ -80,6 +79,13 @@ namespace Assets.Scripts
             }
 
             return new Vector2(Mathf.FloorToInt(operationX), Mathf.FloorToInt(operationY));
+        }
+
+        [Button]
+        public void GenerateTestChunk()
+        {
+            SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, resolution, chunk => { GenerateLobbyMaze(chunk); });
+            chunk.gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
         }
     }
 }
