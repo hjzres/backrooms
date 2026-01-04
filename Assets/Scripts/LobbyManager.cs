@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using NaughtyAttributes;
 using static Assets.Scripts.Chunks;
+using Unity.Collections;
 
 namespace Assets.Scripts
 {
@@ -30,6 +31,8 @@ namespace Assets.Scripts
 
         [SerializeField] private bool useTestVisuals = false;
 
+        [Space(15f)]
+
         [SerializeField] private int seed;
 
         [SerializeField] [Range(1, 20)] private int segments = 2;
@@ -40,15 +43,54 @@ namespace Assets.Scripts
 
         [SerializeField] private float maxChance;
 
+        [SerializeField] private int minWallChain = 1;
+
+        [SerializeField] private int maxWallChain = 3;
+
+        [SerializeField] private float wallHeight = 1.0f;
+
+        [SerializeField] private int minWallLength = 3;
+
+        [SerializeField] private int maxWallLength = 8;
+
         private System.Random prng;
 
         private List<Point> startPoints;
 
         private struct Point
         {
-            public Vector3 initialPosition;
+            public Vector3 nextPosition;
 
-            public Vector3 length;
+            public Direction direction;
+
+            // +x and +z top view perspective.
+            // None is the inital value of both Direction variables.
+            public enum Direction
+            {
+                None, Up, Down, Left, Right
+            }
+
+            public Direction ChooseRandomDirection(System.Random prng)
+            {
+                int rand = prng.Next(1, 5);
+
+                switch (rand)
+                {
+                    case 1:
+                        return Direction.Up;
+
+                    case 2:
+                        return Direction.Down;
+
+                    case 3:
+                        return Direction.Left;
+
+                    case 4:
+                        return Direction.Right;
+                }
+
+                return Direction.None;
+            }
         }
 
         private void Awake()
@@ -67,6 +109,9 @@ namespace Assets.Scripts
 
         private void GenerateLobbyMaze(SquareChunk chunk)
         {
+            startPoints = new List<Point>();
+            startPoints.Clear();
+
             SelectStartingPoints(chunk);
             CreateWalls(chunk);
         }
@@ -77,9 +122,6 @@ namespace Assets.Scripts
 
             float spacing = (float)chunk.length / segments;
             float chance = 0f;
-
-            startPoints = new List<Point>();
-            startPoints.Clear();
 
             for (int x = 0; x <= segments; x++)
             {
@@ -99,13 +141,13 @@ namespace Assets.Scripts
                         float posZ = bottomLeft.z + (y * spacing);
 
                         Point point = new Point();
-                        point.initialPosition = new Vector3(posX, 0, posZ);
+                        point.nextPosition = new Vector3(posX, wallHeight * 0.5f, posZ);
                         startPoints.Add(point);
 
                         if (useTestVisuals)
                         {
-                            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                            cube.transform.position = point.initialPosition;
+                            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                            cube.transform.position = point.nextPosition;
                             cube.transform.parent = chunk.gameObject.transform;
                         }
 
@@ -128,7 +170,84 @@ namespace Assets.Scripts
 
         private void CreateWalls(SquareChunk chunk)
         {
+            if (startPoints.Count <= 0)
+            {
+                throw new ArgumentException("There are no [startPoints] available! Method: [CreateWalls()]");
+            }
 
+            for (int i = 0; i < startPoints.Count; i++)
+            {
+                Point point = startPoints[i];
+
+                GameObject chainParent = new GameObject($"Chain {i + 1}");
+                chainParent.transform.parent = chunk.gameObject.transform;
+
+                int iterations = prng.Next(minWallChain, maxWallChain);
+                Vector3 previousDirection = Vector3.zero;
+
+                for (int j = 0; j < iterations; j++)
+                {
+                    point.direction = point.ChooseRandomDirection(prng);
+
+                    Vector3 genDirection = SelectDirectionForNextWall(point, previousDirection);
+                    previousDirection = genDirection;
+
+                    float length = prng.Next(minWallLength, maxWallLength);
+
+                    bool isUp = point.direction == Point.Direction.Up;
+                    bool isDown = point.direction == Point.Direction.Down;
+                    bool isLeft = point.direction == Point.Direction.Left;
+                    bool isRight = point.direction == Point.Direction.Right;
+
+                    float xAxis = isLeft || isRight ? length : 1;
+                    float zAxis = isUp || isDown ? length : 1;
+
+                    GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    wall.transform.position = point.nextPosition + genDirection * length * 0.5f;
+                    wall.transform.localScale = new Vector3(xAxis, wallHeight, zAxis);
+                    point.nextPosition += genDirection * length;
+
+                    wall.transform.parent = chainParent.transform;
+
+                    if (useTestVisuals)
+                    {
+                        GameObject otherRefPoint = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        otherRefPoint.transform.position = point.nextPosition;
+                        otherRefPoint.transform.parent = chainParent.transform;
+                    }
+                }
+            }
+        }
+
+        private Vector3 SelectDirectionForNextWall(Point point, Vector3 previousDirection)
+        {
+            Vector3 direction = Vector3.zero;
+
+            switch (point.direction)
+            {
+                case Point.Direction.Up:
+                    direction = new Vector3(0, 0, 1);
+                    break;
+
+                case Point.Direction.Down:
+                    direction = new Vector3(0, 0, -1);
+                    break;
+
+                case Point.Direction.Left:
+                    direction = new Vector3(-1, 0, 0);
+                    break;
+
+                case Point.Direction.Right:
+                    direction = new Vector3(1, 0, 0);
+                    break;
+            }
+
+            if (direction == -previousDirection)
+            {
+                direction *= -1;
+            }
+
+            return direction;
         }
 
         private void UpdateClientChunks()

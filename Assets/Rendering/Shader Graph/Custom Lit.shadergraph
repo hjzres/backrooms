@@ -4211,7 +4211,7 @@
     "m_Title": "Main Texture",
     "m_Position": {
         "x": -1201.0,
-        "y": 23.00000762939453
+        "y": 23.0
     }
 }
 
@@ -5268,8 +5268,8 @@
     "m_ObjectId": "6c4c70f3fd9c4043bad521a094969755",
     "m_Title": "Triplanar Mapping",
     "m_Position": {
-        "x": -4211.99951171875,
-        "y": 35.00000762939453
+        "x": -4212.0,
+        "y": 35.0
     }
 }
 
@@ -6155,7 +6155,7 @@
     "m_Title": "Normal Texture",
     "m_Position": {
         "x": -1201.0,
-        "y": 338.9999694824219
+        "y": 339.0
     }
 }
 
@@ -6829,7 +6829,7 @@
     "m_Title": "Ambient Occlusion Texture",
     "m_Position": {
         "x": -1203.0,
-        "y": 653.9998779296875
+        "y": 654.0
     }
 }
 
@@ -8563,7 +8563,7 @@
     "m_Title": "Parallax Mapping",
     "m_Position": {
         "x": -2599.0,
-        "y": 28.000003814697267
+        "y": 28.0
     }
 }
 
@@ -8574,7 +8574,7 @@
     "m_Title": "Specular Gloss Texture",
     "m_Position": {
         "x": -1207.0,
-        "y": 971.9998168945313
+        "y": 972.0
     }
 }
 

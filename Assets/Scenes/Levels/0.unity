@@ -420,13 +420,18 @@ MonoBehaviour:
   resolution: 1
   defaultMaterial: {fileID: 2100000, guid: c028f654dafceaa46a5028f6c2b002d2, type: 2}
   player: {fileID: 1844967532}
-  useRandomSeed: 1
+  useRandomSeed: 0
   useTestVisuals: 0
   seed: 2
   segments: 14
   chanceThreshold: 4
   minChance: 0.1
   maxChance: 1
+  minWallChain: 4
+  maxWallChain: 7
+  wallHeight: 6
+  minWallLength: 3
+  maxWallLength: 8
 --- !u!4 &1894304548
 Transform:
   m_ObjectHideFlags: 0
