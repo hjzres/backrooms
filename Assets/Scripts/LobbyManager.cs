@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using NaughtyAttributes;
 using static Assets.Scripts.Chunks;
-using Unity.Collections;
 
 namespace Assets.Scripts
 {
@@ -52,6 +51,10 @@ namespace Assets.Scripts
         [SerializeField] private int minWallLength = 3;
 
         [SerializeField] private int maxWallLength = 8;
+
+        [Space(15f)]
+
+        [SerializeField] private Material arrowWallpaper;
 
         private System.Random prng;
 
@@ -190,7 +193,6 @@ namespace Assets.Scripts
                     point.direction = point.ChooseRandomDirection(prng);
 
                     Vector3 genDirection = SelectDirectionForNextWall(point, previousDirection);
-                    previousDirection = genDirection;
 
                     float length = prng.Next(minWallLength, maxWallLength);
 
@@ -199,13 +201,21 @@ namespace Assets.Scripts
                     bool isLeft = point.direction == Point.Direction.Left;
                     bool isRight = point.direction == Point.Direction.Right;
 
-                    float xAxis = isLeft || isRight ? length : 1;
-                    float zAxis = isUp || isDown ? length : 1;
+                    float xAxisScale = isLeft || isRight ? length : 1;
+                    float zAxisScale = isUp || isDown ? length : 1;
+
+                    float offsetX = genDirection == previousDirection ? 0f : (isLeft ? -0.5f : (isUp ? 0.5f : (isRight ? 0.5f : 0.5f)));
+                    float offsetZ = 0;
+
+                    previousDirection = genDirection;
 
                     GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     wall.transform.position = point.nextPosition + genDirection * length * 0.5f;
-                    wall.transform.localScale = new Vector3(xAxis, wallHeight, zAxis);
+                    wall.transform.localScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
+                    wall.GetComponent<MeshRenderer>().material = arrowWallpaper;
+
                     point.nextPosition += genDirection * length;
+                    point.nextPosition = new Vector3(point.nextPosition.x + offsetX, point.nextPosition.y, point.nextPosition.z + offsetZ);
 
                     wall.transform.parent = chainParent.transform;
 

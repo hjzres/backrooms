@@ -71,6 +71,8 @@ namespace Assets.Scripts
 
             private void GenerateNonTriangularConstituents(float spacingBetweenVertices)
             {
+                int k = 0;
+
                 for (int i = 0; i < resolution + 1; i++)
                 {
                     for (int j = 0; j < resolution + 1; j++)
@@ -79,8 +81,9 @@ namespace Assets.Scripts
                         float spacingY = j * spacingBetweenVertices;
 
                         vertices[i * (resolution + 1) + j] = new Vector3(spacingX, 0, spacingY);
-                        uvs[i * (resolution + 1) + j] = new Vector2(spacingX, spacingY);
+                        uvs[k] = new Vector2(spacingX / (resolution + 1), spacingY / (resolution + 1));
                         normals[i * (resolution + 1) + j] = Vector3.back;
+                        k++;
                     }
                 }
             }
