@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts
 {
     public class Chunks
     {
-        public static int clientDistanceInChunks = 3;
+        public static int clientDistanceInChunks = 1;
 
         public static float distanceThreshold = 100f;
 

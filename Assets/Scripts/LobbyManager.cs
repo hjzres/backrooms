@@ -6,6 +6,13 @@ using static Assets.Scripts.Chunks;
 
 namespace Assets.Scripts
 {
+    // +x and +z top view perspective.
+    // None is the inital value of both Direction variables.
+    public enum NextDirection
+    {
+        NONE, UP, DOWN, LEFT, RIGHT
+    }
+
     public class LobbyManager : MonoBehaviour
     {
         [Header("Chunking Properties")]
@@ -13,8 +20,6 @@ namespace Assets.Scripts
         [SerializeField] [Min(1)] private int meshLength = 1;
 
         [SerializeField] [Min(1)] private int resolution = 1;
-
-        [SerializeField] private Material defaultMaterial;
 
         [SerializeField] private Transform player;
 
@@ -42,11 +47,11 @@ namespace Assets.Scripts
 
         [SerializeField] private float maxChance;
 
+        [SerializeField] private float wallHeight = 1.0f;
+
         [SerializeField] private int minWallChain = 1;
 
         [SerializeField] private int maxWallChain = 3;
-
-        [SerializeField] private float wallHeight = 1.0f;
 
         [SerializeField] private int minWallLength = 3;
 
@@ -54,45 +59,53 @@ namespace Assets.Scripts
 
         [Space(15f)]
 
+        [SerializeField] private Material defaultMaterial;
+
         [SerializeField] private Material arrowWallpaper;
+
+        [SerializeField] private Material carpet;
 
         private System.Random prng;
 
         private List<Point> startPoints;
 
+        private readonly struct Directions
+        {
+            public static readonly Vector3 UP_v = new Vector3(0, 0, 1);
+
+            public static readonly Vector3 DOWN_v = new Vector3(0, 0, -1);
+
+            public static readonly Vector3 LEFT_v = new Vector3(-1, 0, 0);
+
+            public static readonly Vector3 RIGHT_v = new Vector3(1, 0, 0);
+        }
+
         private struct Point
         {
             public Vector3 nextPosition;
 
-            public Direction direction;
+            public NextDirection nextDirection;
 
-            // +x and +z top view perspective.
-            // None is the inital value of both Direction variables.
-            public enum Direction
+            public NextDirection ChooseRandomDirection(System.Random prng)
             {
-                None, Up, Down, Left, Right
-            }
-
-            public Direction ChooseRandomDirection(System.Random prng)
-            {
-                int rand = prng.Next(1, 5);
+                int rand = prng.Next(1, sizeof(NextDirection) + 1);
 
                 switch (rand)
                 {
                     case 1:
-                        return Direction.Up;
+                        return NextDirection.UP;
 
                     case 2:
-                        return Direction.Down;
+                        return NextDirection.DOWN;
 
                     case 3:
-                        return Direction.Left;
+                        return NextDirection.LEFT;
 
                     case 4:
-                        return Direction.Right;
+                        return NextDirection.RIGHT;
                 }
 
-                return Direction.None;
+                return NextDirection.NONE;
             }
         }
 
@@ -160,17 +173,6 @@ namespace Assets.Scripts
             }
         }
 
-        private float NextFloat(float min, float max)
-        {
-            if (min > max)
-            {
-                throw new ArgumentException("Variable 'min' must be smaller than variable 'max' [Src: NextFloat method].");
-            }
-
-            double range = max - min;
-            return (float)(min + prng.NextDouble() * range);
-        }
-
         private void CreateWalls(SquareChunk chunk)
         {
             if (startPoints.Count <= 0)
@@ -190,32 +192,23 @@ namespace Assets.Scripts
 
                 for (int j = 0; j < iterations; j++)
                 {
-                    point.direction = point.ChooseRandomDirection(prng);
-
-                    Vector3 genDirection = SelectDirectionForNextWall(point, previousDirection);
+                    point.nextDirection = point.ChooseRandomDirection(prng);
+                    Vector3 direction = SelectDirectionForNextWall(point, previousDirection);
 
                     float length = prng.Next(minWallLength, maxWallLength);
 
-                    bool isUp = point.direction == Point.Direction.Up;
-                    bool isDown = point.direction == Point.Direction.Down;
-                    bool isLeft = point.direction == Point.Direction.Left;
-                    bool isRight = point.direction == Point.Direction.Right;
+                    // Adding +1 simplifies the code and overlaps the walls, but due to the material it will not be noticeable.
+                    float xAxisScale = point.nextDirection == NextDirection.LEFT || point.nextDirection == NextDirection.RIGHT ? length + 1 : 1;
+                    float zAxisScale = point.nextDirection == NextDirection.UP || point.nextDirection == NextDirection.DOWN ? length + 1 : 1;
 
-                    float xAxisScale = isLeft || isRight ? length : 1;
-                    float zAxisScale = isUp || isDown ? length : 1;
-
-                    float offsetX = genDirection == previousDirection ? 0f : (isLeft ? -0.5f : (isUp ? 0.5f : (isRight ? 0.5f : 0.5f)));
-                    float offsetZ = 0;
-
-                    previousDirection = genDirection;
+                    previousDirection = direction;
 
                     GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    wall.transform.position = point.nextPosition + genDirection * length * 0.5f;
+                    wall.transform.position = point.nextPosition + direction * length * 0.5f;
                     wall.transform.localScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
                     wall.GetComponent<MeshRenderer>().material = arrowWallpaper;
 
-                    point.nextPosition += genDirection * length;
-                    point.nextPosition = new Vector3(point.nextPosition.x + offsetX, point.nextPosition.y, point.nextPosition.z + offsetZ);
+                    point.nextPosition += direction * length;
 
                     wall.transform.parent = chainParent.transform;
 
@@ -233,31 +226,26 @@ namespace Assets.Scripts
         {
             Vector3 direction = Vector3.zero;
 
-            switch (point.direction)
+            switch (point.nextDirection)
             {
-                case Point.Direction.Up:
-                    direction = new Vector3(0, 0, 1);
+                case NextDirection.UP:
+                    direction = Directions.UP_v;
                     break;
 
-                case Point.Direction.Down:
-                    direction = new Vector3(0, 0, -1);
+                case NextDirection.DOWN:
+                    direction = Directions.DOWN_v;
                     break;
 
-                case Point.Direction.Left:
-                    direction = new Vector3(-1, 0, 0);
+                case NextDirection.LEFT:
+                    direction = Directions.LEFT_v;
                     break;
 
-                case Point.Direction.Right:
-                    direction = new Vector3(1, 0, 0);
+                case NextDirection.RIGHT:
+                    direction = Directions.RIGHT_v;
                     break;
             }
 
-            if (direction == -previousDirection)
-            {
-                direction *= -1;
-            }
-
-            return direction;
+            return direction == -previousDirection ? -direction : direction;
         }
 
         private void UpdateClientChunks()
@@ -290,8 +278,8 @@ namespace Assets.Scripts
 
         private Vector2 ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
         {
-            float operationX = clientPosition.x / (chunkLength);
-            float operationY = clientPosition.z / (chunkLength);
+            float operationX = clientPosition.x / chunkLength;
+            float operationY = clientPosition.z / chunkLength;
 
             if (clientPosition.x < 0)
             {
@@ -299,6 +287,17 @@ namespace Assets.Scripts
             }
 
             return new Vector2(Mathf.FloorToInt(operationX), Mathf.FloorToInt(operationY));
+        }
+
+        private float NextFloat(float min, float max)
+        {
+            if (min > max)
+            {
+                throw new ArgumentException("Variable 'min' must be smaller than variable 'max' [Src: NextFloat method].");
+            }
+
+            double range = max - min;
+            return (float)(min + prng.NextDouble() * range);
         }
 
         [Button]
