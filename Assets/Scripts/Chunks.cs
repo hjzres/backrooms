@@ -62,6 +62,7 @@ namespace Assets.Scripts
                 mesh.uv = uvs;
                 mesh.triangles = triangles;
                 mesh.normals = normals;
+                mesh.RecalculateNormals();
 
                 gameObject.GetComponent<MeshFilter>().mesh = mesh;
 
@@ -81,9 +82,8 @@ namespace Assets.Scripts
                         float spacingY = j * spacingBetweenVertices;
 
                         vertices[i * (resolution + 1) + j] = new Vector3(spacingX, 0, spacingY);
-                        uvs[k] = new Vector2(spacingX / (resolution + 1), spacingY / (resolution + 1));
+                        uvs[k] = new Vector2((float)i / resolution, (float)j / resolution);
                         normals[i * (resolution + 1) + j] = Vector3.back;
-                        k++;
                     }
                 }
             }
