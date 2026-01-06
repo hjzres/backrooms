@@ -262,7 +262,7 @@ namespace Assets.Scripts
                     {
                         Vector2 chunkPosition = coordinates * meshLength;
                         SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyMaze(chunk); });
-                        chunk.gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
+                        chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
                         chunk.gameObject.transform.parent = chunkHolder.transform;
 
                         squareChunks.Add(new Vector3(coordinates.x, 0, coordinates.y), chunk);
@@ -308,7 +308,7 @@ namespace Assets.Scripts
             prng = new System.Random(seedToUse);
 
             SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, resolution, chunk => { GenerateLobbyMaze(chunk); });
-            chunk.gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
+            chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
         }
     }
 }
