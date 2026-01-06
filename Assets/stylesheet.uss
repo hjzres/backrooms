@@ -1,0 +1,7 @@
+:root {
+}
+
+.button {
+    height: 20%;
+    font-size: 300%;
+}
