@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: 692e8b48f84ac074c92adc977e256de9
+=======
+guid: aa5033fa8792ebd429bac5929d1844f5
+>>>>>>> origin/level-design
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
