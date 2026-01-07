@@ -65,6 +65,8 @@ namespace Assets.Scripts
 
         [SerializeField] private Material carpet;
 
+        [Space(15f)]
+
         private System.Random prng;
 
         private List<Point> startPoints;
@@ -106,6 +108,21 @@ namespace Assets.Scripts
                 }
 
                 return NextDirection.NONE;
+            }
+        }
+
+        private struct Wall
+        {
+            public GameObject gameObject;
+
+            private readonly Action<Wall> onCreate;
+
+            public Wall(Material material, Action<Wall> onCreate)
+            {
+                this.gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                gameObject.GetComponent<MeshRenderer>().material = material;
+                this.onCreate = onCreate;
+                onCreate?.Invoke(this);
             }
         }
 
@@ -203,14 +220,13 @@ namespace Assets.Scripts
 
                     previousDirection = direction;
 
-                    GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    wall.transform.position = point.nextPosition + direction * length * 0.5f;
-                    wall.transform.localScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
-                    wall.GetComponent<MeshRenderer>().material = arrowWallpaper;
+                    Wall wall = new Wall(arrowWallpaper, onCreate => AddDecorationsOnWall());
+                    wall.gameObject.transform.position = point.nextPosition + direction * length * 0.5f;
+                    wall.gameObject.transform.localScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
 
                     point.nextPosition += direction * length;
 
-                    wall.transform.parent = chainParent.transform;
+                    wall.gameObject.transform.parent = chainParent.transform;
 
                     if (useTestVisuals)
                     {
@@ -246,6 +262,11 @@ namespace Assets.Scripts
             }
 
             return direction == -previousDirection ? -direction : direction;
+        }
+
+        private void AddDecorationsOnWall()
+        {
+            
         }
 
         private void UpdateClientChunks()
