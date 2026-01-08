@@ -20,8 +20,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Test
-  m_Shader: {fileID: -6465566751694194690, guid: 3a389afe83044424ab70fd05c9b1d44f, type: 3}
+  m_Name: Test 1
+  m_Shader: {fileID: -6465566751694194690, guid: 1de370dbcf6b8d841ac734a0118f5743, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -164,7 +164,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Height_Amplitude: 2
+    - _Height_Amplitude: 15.3
     - _LOD: 1
     - _LOD_Threshold: 1
     - _Metallic: 0
@@ -175,15 +175,15 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Smoothness: 0
+    - _Smoothness: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Steps: 32
     - _Surface: 0
-    - _Tiling: 0.05
-    - _Use_Height_Map: 0
+    - _Tiling: 0.139
+    - _Use_Height_Map: 1
     - _Use_Specular_Gloss_Texture: 0
     - _Use_Specular_Map: 0
     - _WorkflowMode: 1
