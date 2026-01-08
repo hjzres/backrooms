@@ -5,10 +5,6 @@ namespace Assets.Scripts
 {
     public class Chunks
     {
-        public static int clientDistanceInChunks = 1;
-
-        public static float distanceThreshold = 100f;
-
         public class SquareChunk
         {
             public Vector2 position;
@@ -45,7 +41,6 @@ namespace Assets.Scripts
                 this.position = position;
                 this.resolution = resolution;
                 this.length = length;
-
                 this.vertices = vertices;
                 this.normals = normals;
                 this.uvs = uvs;
