@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Test Parallax
-  m_Shader: {fileID: -6465566751694194690, guid: 51deb3a9f28bbfd419448aa300f9fa80, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 139942d6f839f98489e014c7c02148ca, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -24,6 +24,26 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _Emission_Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Height_Texture:
+        m_Texture: {fileID: 2800000, guid: f259980caf8156f43a2741867fbc9795, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Main_Texture:
+        m_Texture: {fileID: 2800000, guid: 97f421155c67de44781af4ddbd1f10ec, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Normal_Texture:
+        m_Texture: {fileID: 2800000, guid: a86fd8c0762c0c145a1ac004a2aa8f7e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Occlusion_Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ParallaxOcclusionMapping_6a5917e1c319487c84000ff1f31481f2_Heightmap_2_Texture2D:
         m_Texture: {fileID: 2800000, guid: f259980caf8156f43a2741867fbc9795, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -34,6 +54,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _SampleTexture2D_99313bc5659e4309a34d1a553215b02a_Texture_1_Texture2D:
         m_Texture: {fileID: 2800000, guid: a86fd8c0762c0c145a1ac004a2aa8f7e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Spec_Gloss_Texture:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -50,9 +74,20 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ENVIRONMENTREFLECTIONS_OFF: 0
+    - _Height_Amplitude: -50.19
+    - _Normal_Strength: 1
+    - _Occlusion_Strength: 0
     - _QueueControl: 0
     - _QueueOffset: 0
-    m_Colors: []
+    - _Smoothness: 0
+    - _Steps: 5
+    - _Tiling: 0.969
+    - _Use_Specular_Gloss_Texture: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Emission_Color: {r: 0, g: 0, b: 0, a: 1}
+    - _Rotation: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &8800775561041649802
