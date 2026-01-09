@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using NaughtyAttributes;
 using static Assets.Scripts.Chunks;
+using NUnit.Framework.Internal;
 
 namespace Assets.Scripts
 {
@@ -15,21 +16,19 @@ namespace Assets.Scripts
 
     public class LobbyManager : MonoBehaviour
     {
+        [SerializeField] private Transform player;
+
         [Header("Chunking Properties")]
 
         [SerializeField] [Min(1)] private int meshLength = 1;
 
         [SerializeField] [Min(1)] private int resolution = 1;
 
-        [SerializeField] private Transform player;
-
         [SerializeField] private int clientDistanceInChunks = 1;
 
-        private GameObject chunkHolder;
+        private GameObject chunkContainer;
 
         private static Dictionary<Vector2Int, SquareChunk> squareChunks;
-
-        private static List<SquareChunk> loadedChunks;
 
         [Header("Maze Properties")]
 
@@ -59,15 +58,13 @@ namespace Assets.Scripts
 
         [SerializeField] private int maxWallLength = 8;
 
-        [Space(15f)]
+        [Header("Materials")]
 
         [SerializeField] private Material defaultMaterial;
 
         [SerializeField] private Material arrowWallpaper;
 
         [SerializeField] private Material carpet;
-
-        [Space(15f)]
 
         private System.Random prng;
 
@@ -128,13 +125,41 @@ namespace Assets.Scripts
             }
         }
 
+        [System.Serializable]
+        public struct Decoration
+        {
+            public string name;
+
+            public GameObject prefab;
+
+            public int maxSpawnChance;
+
+            public float rotationOffsetY;
+
+            public float positionOffsetY;
+
+            public float offsetReductionXZ;
+        }
+
+        [Header("Wall Decorations")]
+        public Decoration wallOutlet;
+
+        private List<Decoration> decorations;
+
         private void Awake()
         {
             squareChunks = new Dictionary<Vector2Int, SquareChunk>();
-            loadedChunks = new List<SquareChunk>();
 
-            chunkHolder = new GameObject("Active Chunks");
+            chunkContainer = new GameObject("Generated Chunks");
             prng = new System.Random(seed);
+
+            AddDecorationsToList();
+        }
+
+        // Unfortunately has to be hard coded.
+        private void AddDecorationsToList()
+        {
+            decorations.Add(wallOutlet);
         }
 
         private void LateUpdate()
@@ -222,8 +247,14 @@ namespace Assets.Scripts
 
                     previousDirection = direction;
 
-                    Wall wall = new Wall(arrowWallpaper, onCreate => AddDecorationsOnWall());
-                    wall.gameObject.transform.position = point.nextPosition + direction * length * 0.5f;
+                    Vector3 wallPosition = point.nextPosition + direction * length * 0.5f;
+
+                    // Have a chance to spawn one of the decorations from the list.
+                    int decorationIndex = prng.Next(0, decorations.Count);
+                    float scale = Mathf.Max(xAxisScale, zAxisScale);
+
+                    Wall wall = new Wall(arrowWallpaper, onCreate => AddDecorationsOnWall(decorationIndex, scale, wallPosition, previousDirection, chainParent.transform));
+                    wall.gameObject.transform.position = wallPosition;
                     wall.gameObject.transform.localScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
 
                     point.nextPosition += direction * length;
@@ -238,6 +269,8 @@ namespace Assets.Scripts
                     }
                 }
             }
+
+            startPoints.Clear();
         }
 
         private Vector3 SelectDirectionForNextWall(Point point, Vector3 previousDirection)
@@ -266,9 +299,27 @@ namespace Assets.Scripts
             return direction == -previousDirection ? -direction : direction;
         }
 
-        private void AddDecorationsOnWall()
+        private void AddDecorationsOnWall(int index, float wallScale, Vector3 wallPosition, Vector3 direction, Transform parent)
         {
-            
+            bool generationChance = prng.Next(1, wallOutlet.maxSpawnChance) == 1;
+
+            if (!generationChance) return;
+
+            Decoration deco = decorations[index];
+            deco.prefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wallScale *= 0.5f;
+
+            int side = prng.Next(1, 10) < 8 ? -1 : 1;
+
+            float offsetX = direction == Directions.UP_v || direction == Directions.DOWN_v ? 0.5f * side: 0;
+            float offsetZ = direction == Directions.LEFT_v || direction == Directions.RIGHT_v ? -0.5f * side: 0;
+
+            float randOffsetX = offsetZ == 0 ? NextFloat(-wallScale + deco.offsetReductionXZ, wallScale - deco.offsetReductionXZ) : 0;
+            float randOffsetZ = offsetX == 0 ? NextFloat(-wallScale + deco.offsetReductionXZ, wallScale - deco.offsetReductionXZ) : 0;
+
+            Vector3 offsets = new Vector3(offsetX, wallOutlet.positionOffsetY, offsetZ);
+            deco.prefab.transform.position = wallPosition + offsets;
+            deco.prefab.transform.parent = parent;
         }
 
         private void UpdateClientChunks()
@@ -287,7 +338,7 @@ namespace Assets.Scripts
                         Vector2 chunkPosition = coordinates * meshLength;
                         SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyMaze(chunk); });
                         chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
-                        chunk.gameObject.transform.parent = chunkHolder.transform;
+                        chunk.gameObject.transform.parent = chunkContainer.transform;
 
                         squareChunks.Add(coordinates, chunk);
                     }
@@ -333,6 +384,8 @@ namespace Assets.Scripts
 
             SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, resolution, chunk => { GenerateLobbyMaze(chunk); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
+
+            AddDecorationsToList();
         }
     }
 }
