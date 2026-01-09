@@ -50,10 +50,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _A: 0
+    - _B: 0
     - _Blend: 3
-    - _Height: 0.02
+    - _C: 0
+    - _Height: 0.01
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _Steps: 16
     - _Tiling: 0.04
     - _max: 32
     - _min: 1
