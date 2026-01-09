@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Triplanar Lit
-  m_Shader: {fileID: -6465566751694194690, guid: 3a389afe83044424ab70fd05c9b1d44f, type: 3}
+  m_Name: Test_a
+  m_Shader: {fileID: -6465566751694194690, guid: 082d0e61fd6462945998eee6d75f79a4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -25,7 +25,15 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _Base_Map:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 97f421155c67de44781af4ddbd1f10ec, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _HeightMap:
+        m_Texture: {fileID: 2800000, guid: f259980caf8156f43a2741867fbc9795, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Height_Map:
+        m_Texture: {fileID: 2800000, guid: f259980caf8156f43a2741867fbc9795, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -42,14 +50,21 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Blend_Sharpness: 4
+    - _A: 0
+    - _B: 0
+    - _Blend: 3
+    - _C: 0
+    - _Height: 0.01
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Tiling: 1
+    - _Steps: 16
+    - _Tiling: 0.04
+    - _max: 32
+    - _min: 1
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!114 &8548618952433543254
+--- !u!114 &7486152985563075996
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
