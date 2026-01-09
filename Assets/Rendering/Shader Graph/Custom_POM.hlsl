@@ -34,7 +34,7 @@ float2 ParallaxOcclusionMapping(float2 uv, float3 viewDir, float heightScale, in
     return lerp(currentUV, prevUV, weight);
 }
 
-void TriplanarPOM_float(float3 WorldNormal, float3 ViewDirWS, float3 WorldPos, int Steps, float HeightScale, float Tiling, out float2 UV_X, out float2 UV_Y, out float2 UV_Z)
+void TriplanarPOM_float(float3 WorldPos, float3 WorldNormal, float3 ViewDirWS, float Tiling, float HeightScale, int Steps, out float2 UV_X, out float2 UV_Y, out float2 UV_Z)
 {
     float3 n = normalize(WorldNormal);
     float3 v = normalize(ViewDirWS);
