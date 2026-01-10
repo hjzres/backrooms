@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static Assets.Scripts.Chunks;
-using static UnityEngine.Rendering.PostProcessing.HistogramMonitor;
 
 namespace Assets.Scripts
 {
@@ -88,6 +87,8 @@ namespace Assets.Scripts
             public float positionOffsetY;
 
             public float offsetReductionXZ;
+
+            public bool useOffsets;
         }
 
         // ------------------------------------------------------------------------------------------- //
@@ -107,8 +108,6 @@ namespace Assets.Scripts
         [SerializeField] private int repetitiveWallsSpawnChance = 10;
 
         [SerializeField] private int pitfallsSpawnChance = 5;
-
-        //[SerializeField] private Vector3 noiseThresholds = Vector3.zero;
 
         [Header("Maze Properties")]
 
@@ -137,6 +136,12 @@ namespace Assets.Scripts
         [SerializeField] private int minWallLength = 3;
 
         [SerializeField] private int maxWallLength = 8;
+
+        [Header("Repetitive Walls Properties")]
+
+        [SerializeField] private int repetitiveWallSegments = 10;
+
+        [SerializeField] private float repetitiveWallsThickness = 1.5f;
 
         [Header("Pitfalls Properties")]
 
@@ -197,7 +202,7 @@ namespace Assets.Scripts
 
         private void GenerateLobbyLevel(SquareChunk chunk, Vector2 coordinates)
         {
-            float noise = Noise.WhiteNoise(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100;
+            float noise = Noise.WhiteNoise2D(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100;
 
             if (noise < mazeSpawnChance)
             {
@@ -221,8 +226,8 @@ namespace Assets.Scripts
             ceiling.gameObject.isStatic = true;
 
             ceilingContainer.transform.parent = chunk.transform;
-            ceilingContainer.transform.position = new Vector3(ceilingContainer.transform.position.x, wallHeight, ceilingContainer.transform.position.z);
-            ceilingContainer.transform.rotation = Quaternion.Euler(180, 0, 0);
+            ceilingContainer.transform.SetPositionAndRotation(new Vector3(ceilingContainer.transform.position.x, wallHeight, ceilingContainer.transform.position.z), Quaternion.Euler(180, 0, 0));
+            ceilingContainer.isStatic = true;
         }
 
         private void GenerateMaze(SquareChunk chunk)
@@ -236,7 +241,7 @@ namespace Assets.Scripts
 
         private void RandomizeStartingPoints(SquareChunk chunk)
         {
-            Vector3 bottomLeft = new Vector3(chunk.position.x - (chunk.length * 0.5f), 0, chunk.position.y - (chunk.length * 0.5f));
+            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
 
             float spacing = (float)chunk.length / segments;
             float chance = 0f;
@@ -256,21 +261,23 @@ namespace Assets.Scripts
                     if (chance >= chanceThreshold)
                     {
                         float posX = bottomLeft.x + (x * spacing);
-                        float posZ = bottomLeft.z + (y * spacing);
+                        float posZ = bottomLeft.y + (y * spacing);
 
-                        Point point = new Point();
-                        point.nextPosition = new Vector3(posX, wallHeight * 0.5f, posZ);
+                        Point point = new Point 
+                        { 
+                            nextPosition = new Vector3(posX, wallHeight * 0.5f, posZ) 
+                        };
+
                         startPoints.Add(point);
+                        chance = 0f;
 
                         if (useTestVisuals)
                         {
-                            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                            cube.transform.position = point.nextPosition;
-                            cube.transform.parent = chunk.transform;
-                            cube.isStatic = true;
+                            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                            sphere.transform.position = point.nextPosition;
+                            sphere.transform.parent = chunk.transform;
+                            sphere.isStatic = true;
                         }
-
-                        chance = 0f;
                     }
                 }
             }
@@ -304,15 +311,21 @@ namespace Assets.Scripts
                     int xAxisScale = point.nextDirection == NextDirection.LEFT || point.nextDirection == NextDirection.RIGHT ? length + 1 : 1;
                     int zAxisScale = point.nextDirection == NextDirection.UP || point.nextDirection == NextDirection.DOWN ? length + 1 : 1;
 
-                    previousDirection = direction;
-
-                    Vector3 wallPosition = point.nextPosition + (0.5f * length * direction);
-                    Vector3 wallScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
-                    int decorationIndex = prng.Next(0, decorations.Count); // Have a chance to spawn one of the decorations from the list.
+                    // Have a chance to spawn one of the decorations from the list.
+                    int decorationIndex = prng.Next(0, decorations.Count); 
                     int scaleInRespectToDirection = Mathf.Max(xAxisScale, zAxisScale);
 
-                    LobbyWall wall = new LobbyWall(wallPosition, wallScale, arrowWallpaper, 
-                        onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, wallPosition, previousDirection, chainParent.transform));
+                    previousDirection = direction;
+
+                    Vector3 position = point.nextPosition + 0.5f * length * direction;
+                    Vector3 scale = new Vector3(xAxisScale, wallHeight, zAxisScale);
+
+                    LobbyWall wall = new LobbyWall(
+                        position, 
+                        scale, 
+                        arrowWallpaper, 
+                        onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, position, previousDirection, chainParent.transform)
+                    );
 
                     point.nextPosition += direction * length;
                     wall.transform.parent = chainParent.transform;
@@ -385,31 +398,27 @@ namespace Assets.Scripts
 
         private void GenerateRepetitiveWalls(SquareChunk chunk)
         {
-            Vector3 bottomLeft = new Vector3(chunk.position.x - (chunk.length * 0.5f), 0, chunk.position.y - (chunk.length * 0.5f));
+            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
 
-            int reducedSegments = Mathf.FloorToInt(segments * 0.8f);
-            float spacing = (float)chunk.length / reducedSegments;
+            float spacing = (float)chunk.length / repetitiveWallSegments;
 
-            for (int x = 0; x <= reducedSegments; x++)
+            for (int x = 0; x <= repetitiveWallSegments; x++)
             {
-                for (int y = 0; y <= reducedSegments; y++)
+                for (int y = 0; y <= repetitiveWallSegments; y++)
                 {
-                    float posX = bottomLeft.x + (x * spacing);
-                    float posZ = bottomLeft.z + (y * spacing);
-
-                    Vector3 position = new Vector3(posX, wallHeight * 0.5f, posZ);
-                    Vector3 scale = new Vector3(1.5f, wallHeight, 1.5f);
+                    Vector3 position = new Vector3(bottomLeft.x + x * spacing, wallHeight * 0.5f, bottomLeft.y + y * spacing);
+                    Vector3 scale = new Vector3(repetitiveWallsThickness, wallHeight, repetitiveWallsThickness);
 
                     LobbyWall wall = new LobbyWall(position, scale, arrowWallpaper, null);
-                    wall.gameObject.isStatic = true;
                     wall.transform.parent = chunk.transform;
+                    wall.gameObject.isStatic = true;
                 }
             }
         }
 
         private void GeneratePitfalls(SquareChunk chunk)
         {
-            Vector3 bottomLeft = new Vector3(chunk.position.x - (chunk.length * 0.5f), 0, chunk.position.y - (chunk.length * 0.5f));
+            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
 
             float spacing = (float)chunk.length / pitfallNumber;
             chunk.transform.position = new Vector3(chunk.transform.position.x, -pitfallDepth, chunk.transform.position.z);
@@ -418,16 +427,18 @@ namespace Assets.Scripts
             {
                 for (int y = 0; y <= pitfallNumber; y++)
                 {
+                    float posOffset = spacing * 0.5f;
                     float posX = bottomLeft.x + x * spacing;
-                    float posZ = bottomLeft.z + y * spacing;
+                    float posZ = bottomLeft.y + y * spacing;
 
                     if (x < pitfallNumber)
                     {
                         LobbyWall wallX = new LobbyWall(
-                            new Vector3(posX + spacing * 0.5f, pitfallDepth * -0.5f, posZ), 
+                            new Vector3(posX + posOffset, pitfallDepth * -0.5f, posZ), 
                             new Vector3(spacing, pitfallDepth, pitfallThickness), 
                             carpet, 
-                            null);
+                            null
+                        );
 
                         wallX.transform.parent = chunk.transform;
                         wallX.gameObject.isStatic = true;
@@ -436,10 +447,11 @@ namespace Assets.Scripts
                     if (y < pitfallNumber)
                     {
                         LobbyWall wallZ = new LobbyWall(
-                            new Vector3(posX, pitfallDepth * -0.5f, posZ + spacing * 0.5f), 
+                            new Vector3(posX, pitfallDepth * -0.5f, posZ + posOffset), 
                             new Vector3(pitfallThickness, pitfallDepth, spacing), 
                             carpet, 
-                            null);
+                            null
+                        );
 
                         wallZ.transform.parent = chunk.transform;
                         wallZ.gameObject.isStatic = true;

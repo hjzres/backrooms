@@ -418,23 +418,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbyManager
   player: {fileID: 1844967532}
   meshLength: 100
-  chunkResolution: 1
-  viewDistanceInChunks: 3
+  viewDistanceInChunks: 1
   mazeSpawnChance: 90
   repetitiveWallsSpawnChance: 5
   pitfallsSpawnChance: 5
   useRandomSeed: 0
   useTestVisuals: 0
   seed: 2
-  segments: 20
+  segments: 18
   chanceThreshold: 4
   minChance: 0.1
   maxChance: 1
-  wallHeight: 6
+  wallHeight: 7
   minWallChain: 4
   maxWallChain: 7
   minWallLength: 3
   maxWallLength: 8
+  repetitiveWallSegments: 14
+  repetitiveWallsThickness: 1.5
   pitfallNumber: 8
   pitfallThickness: 2
   pitfallDepth: 40
@@ -446,6 +447,7 @@ MonoBehaviour:
     spawnChance: 13
     positionOffsetY: -2
     offsetReductionXZ: 0
+    useOffsets: 0
 --- !u!4 &1894304548
 Transform:
   m_ObjectHideFlags: 0
