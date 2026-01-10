@@ -136,6 +136,14 @@ namespace Assets.Scripts
 
         [SerializeField] private int maxWallLength = 8;
 
+        [Header("Pitfalls Properties")]
+
+        [SerializeField] private int pitfallNumber = 5;
+
+        [SerializeField] private float pitfallThickness = 1;
+
+        [SerializeField] private int pitfallDepth = 10;
+
         [Header("Materials")]
 
         [SerializeField] private Material defaultMaterial;
@@ -194,9 +202,14 @@ namespace Assets.Scripts
                 GenerateMaze(chunk);
             }
 
-            else if (noise >= mazeSpawnChance && noise < repetitiveWallsSpawnChance + mazeSpawnChance)
+            else if (noise >= mazeSpawnChance && noise < mazeSpawnChance + repetitiveWallsSpawnChance)
             {
                 GenerateRepetitiveWalls(chunk);
+            }
+
+            else if (noise >= repetitiveWallsSpawnChance && noise <= mazeSpawnChance + repetitiveWallsSpawnChance + pitfallsSpawnChance)
+            {
+                GeneratePitfalls(chunk);
             }
         }
 
@@ -366,11 +379,6 @@ namespace Assets.Scripts
             {
                 for (int y = 0; y <= reducedSegments; y++)
                 {
-                    /*if ((x == 0 || x == reducedSegments || y == 0 || y == reducedSegments))
-                    {
-                        continue;
-                    }*/
-
                     float posX = bottomLeft.x + (x * spacing);
                     float posZ = bottomLeft.z + (y * spacing);
 
@@ -383,9 +391,43 @@ namespace Assets.Scripts
             }
         }
 
-        private void GeneratePitfalls()
+        private void GeneratePitfalls(SquareChunk chunk)
         {
+            Vector3 bottomLeft = new Vector3(chunk.position.x - (chunk.length * 0.5f), 0, chunk.position.y - (chunk.length * 0.5f));
 
+            float spacing = (float)chunk.length / pitfallNumber;
+            chunk.gameObject.transform.position = new Vector3(chunk.gameObject.transform.position.x, -pitfallDepth, chunk.gameObject.transform.position.z);
+
+            for (int x = 0; x <= pitfallNumber; x++)
+            {
+                for (int y = 0; y <= pitfallNumber; y++)
+                {
+                    float posX = bottomLeft.x + x * spacing;
+                    float posZ = bottomLeft.z + y * spacing;
+
+                    if (x < pitfallNumber)
+                    {
+                        LobbyWall wallX = new LobbyWall(
+                            new Vector3(posX + spacing * 0.5f, pitfallDepth * -0.5f, posZ), 
+                            new Vector3(spacing, pitfallDepth, pitfallThickness), 
+                            defaultMaterial, 
+                            null);
+
+                        wallX.gameObject.transform.parent = chunk.gameObject.transform;
+                    }
+
+                    if (y < pitfallNumber)
+                    {
+                        LobbyWall wallZ = new LobbyWall(
+                            new Vector3(posX, pitfallDepth * -0.5f, posZ + spacing * 0.5f), 
+                            new Vector3(pitfallThickness, pitfallDepth, spacing), 
+                            defaultMaterial, 
+                            null);
+
+                        wallZ.gameObject.transform.parent = chunk.gameObject.transform;
+                    }
+                }
+            }
         }
 
         private void UpdateClientChunks()

@@ -28,8 +28,9 @@ namespace Assets.Scripts
             public SquareChunk(Vector2 position, int length, int resolution, Action<SquareChunk> onCreate)
             {
                 Mesh mesh = new Mesh();
+
                 GameObject gameObject = new GameObject("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-                
+
                 // Offset position to center chunk.
                 gameObject.transform.position = new Vector3(position.x - length * 0.5f, 0, position.y - length * 0.5f);
 
