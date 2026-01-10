@@ -164,7 +164,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Height_Amplitude: 15.3
+    - _Height_Amplitude: 17.1
     - _LOD: 1
     - _LOD_Threshold: 1
     - _Metallic: 0
@@ -180,7 +180,7 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
-    - _Steps: 32
+    - _Steps: 8
     - _Surface: 0
     - _Tiling: 0.139
     - _Use_Height_Map: 1
