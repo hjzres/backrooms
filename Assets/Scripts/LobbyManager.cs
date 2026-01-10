@@ -1,8 +1,9 @@
+using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using NaughtyAttributes;
 using static Assets.Scripts.Chunks;
+using static UnityEngine.Rendering.PostProcessing.HistogramMonitor;
 
 namespace Assets.Scripts
 {
@@ -61,9 +62,11 @@ namespace Assets.Scripts
 
             private readonly Action<LobbyWall> onCreate;
 
-            public LobbyWall(Material material, Action<LobbyWall> onCreate)
+            public LobbyWall(Vector3 position, Vector3 scale, Material material, Action<LobbyWall> onCreate)
             {
                 gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                gameObject.transform.position = position;
+                gameObject.transform.localScale = scale;
                 gameObject.GetComponent<MeshRenderer>().material = material;
 
                 this.onCreate = onCreate;
@@ -94,6 +97,16 @@ namespace Assets.Scripts
         [SerializeField] [Min(1)] private int chunkResolution = 1;
 
         [SerializeField] private int viewDistanceInChunks = 1;
+
+        [Space(15f)]
+
+        [SerializeField] private int mazeSpawnChance = 85;
+
+        [SerializeField] private int repetitiveWallsSpawnChance = 10;
+
+        [SerializeField] private int pitfallsSpawnChance = 5;
+
+        //[SerializeField] private Vector3 noiseThresholds = Vector3.zero;
 
         [Header("Maze Properties")]
 
@@ -158,6 +171,11 @@ namespace Assets.Scripts
             AddDecorationsToList();
         }
 
+        private void LateUpdate()
+        {
+            UpdateClientChunks();
+        }
+
         // Unfortunately has to be hard coded.
         private void AddDecorationsToList()
         {
@@ -167,43 +185,28 @@ namespace Assets.Scripts
             };
         }
 
-        private void LateUpdate()
+        private void GenerateLobbyLevel(SquareChunk chunk, Vector2 coordinates)
         {
-            UpdateClientChunks();
+            float noise = Noise.WhiteNoise(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100;
+
+            if (noise < mazeSpawnChance)
+            {
+                GenerateMaze(chunk);
+            }
+
+            else if (noise >= mazeSpawnChance && noise < repetitiveWallsSpawnChance + mazeSpawnChance)
+            {
+                GenerateRepetitiveWalls(chunk);
+            }
         }
 
-        private void GenerateLobbyMaze(SquareChunk chunk, Vector2 coordinates)
+        private void GenerateMaze(SquareChunk chunk)
         {
             startPoints = new List<Point>();
             startPoints.Clear();
 
-            float noise = Mathf.Floor(WhiteNoise(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100);
-            bool rand = noise > 50;
-
-            if (rand)
-            {
-                RandomizeStartingPoints(chunk);
-                CreateWalls(chunk);
-            }
-        }
-
-        private float WhiteNoise(Vector2 value)
-        {
-            return WhiteNoise2DTo1D(value, new Vector2(12.9898f, 78.233f));
-        }
-
-        private float WhiteNoise2DTo1D(Vector2 value, Vector2 dotDirection)
-        {
-            Vector2 smallValue = new Vector2(Mathf.Sin(value.x), Mathf.Sin(value.y));
-            float rand = Vector2.Dot(smallValue, dotDirection);
-            rand = Frac(Mathf.Sin(rand) * 143758.5453f);
-
-            return rand;
-        }
-
-        private float Frac(float num)
-        {
-            return num - Mathf.Floor(num);
+            RandomizeStartingPoints(chunk);
+            CreateWalls(chunk);
         }
 
         private void RandomizeStartingPoints(SquareChunk chunk)
@@ -269,23 +272,21 @@ namespace Assets.Scripts
                     point.nextDirection = point.RandomizeDirection(prng);
                     Vector3 direction = GetDirectionForNextWall(point, previousDirection);
 
-                    float length = prng.Next(minWallLength, maxWallLength);
+                    int length = prng.Next(minWallLength, maxWallLength);
 
                     // Adding +1 simplifies the code and overlaps the walls, but due to the material it will not be noticeable.
-                    float xAxisScale = point.nextDirection == NextDirection.LEFT || point.nextDirection == NextDirection.RIGHT ? length + 1 : 1;
-                    float zAxisScale = point.nextDirection == NextDirection.UP || point.nextDirection == NextDirection.DOWN ? length + 1 : 1;
+                    int xAxisScale = point.nextDirection == NextDirection.LEFT || point.nextDirection == NextDirection.RIGHT ? length + 1 : 1;
+                    int zAxisScale = point.nextDirection == NextDirection.UP || point.nextDirection == NextDirection.DOWN ? length + 1 : 1;
 
                     previousDirection = direction;
 
                     Vector3 wallPosition = point.nextPosition + (0.5f * length * direction);
+                    Vector3 wallScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
+                    int decorationIndex = prng.Next(0, decorations.Count); // Have a chance to spawn one of the decorations from the list.
+                    int scaleInRespectToDirection = Mathf.Max(xAxisScale, zAxisScale);
 
-                    // Have a chance to spawn one of the decorations from the list.
-                    int decorationIndex = prng.Next(0, decorations.Count);
-                    float scaleInRespectToDirection = Mathf.Max(xAxisScale, zAxisScale);
-
-                    LobbyWall wall = new LobbyWall(arrowWallpaper, onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, wallPosition, previousDirection, chainParent.transform));
-                    wall.gameObject.transform.position = wallPosition;
-                    wall.gameObject.transform.localScale = new Vector3(xAxisScale, wallHeight, zAxisScale);
+                    LobbyWall wall = new LobbyWall(wallPosition, wallScale, arrowWallpaper, 
+                        onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, wallPosition, previousDirection, chainParent.transform));
 
                     point.nextPosition += direction * length;
                     wall.gameObject.transform.parent = chainParent.transform;
@@ -354,6 +355,39 @@ namespace Assets.Scripts
             decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(deco.prefab.transform.rotation.x, deco.prefab.transform.rotation.y + rot, deco.prefab.transform.rotation.z));
         }
 
+        private void GenerateRepetitiveWalls(SquareChunk chunk)
+        {
+            Vector3 bottomLeft = new Vector3(chunk.position.x - (chunk.length * 0.5f), 0, chunk.position.y - (chunk.length * 0.5f));
+
+            int reducedSegments = Mathf.FloorToInt(segments * 0.8f);
+            float spacing = (float)chunk.length / reducedSegments;
+
+            for (int x = 0; x <= reducedSegments; x++)
+            {
+                for (int y = 0; y <= reducedSegments; y++)
+                {
+                    /*if ((x == 0 || x == reducedSegments || y == 0 || y == reducedSegments))
+                    {
+                        continue;
+                    }*/
+
+                    float posX = bottomLeft.x + (x * spacing);
+                    float posZ = bottomLeft.z + (y * spacing);
+
+                    Vector3 position = new Vector3(posX, wallHeight * 0.5f, posZ);
+                    Vector3 scale = new Vector3(1.5f, wallHeight, 1.5f);
+
+                    LobbyWall wall = new LobbyWall(position, scale, arrowWallpaper, null);
+                    wall.gameObject.transform.parent = chunk.gameObject.transform;
+                }
+            }
+        }
+
+        private void GeneratePitfalls()
+        {
+
+        }
+
         private void UpdateClientChunks()
         {
             Vector2Int clientChunkCoord = ComputeCliendChunkCoords(player.position, meshLength);
@@ -367,7 +401,7 @@ namespace Assets.Scripts
                     if (!squareChunks.ContainsKey(coordinates))
                     {
                         Vector2 chunkPosition = coordinates * meshLength;
-                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyMaze(chunk, coordinates); });
+                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyLevel(chunk, coordinates); });
                         chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
                         chunk.gameObject.transform.parent = generatedChunksContainer.transform;
 
@@ -379,12 +413,12 @@ namespace Assets.Scripts
             // AI assisted, I could not figure out how to disable them for the life of me.
             // Will definitely come back and rewrite this, as a foreach loop is kind of unoptimal
             // when I feel that it could be done in the nested loops instead.
-            /*foreach (var chunk in squareChunks) 
+            foreach (var chunk in squareChunks) 
             { 
                 Vector2Int delta = chunk.Key - clientChunkCoord; 
                 bool isWithinRange = Mathf.Abs(delta.x) <= viewDistanceInChunks && Mathf.Abs(delta.y) <= viewDistanceInChunks; 
                 chunk.Value.gameObject.SetActive(isWithinRange); 
-            }*/
+            }
         }
 
         private Vector2Int ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
@@ -414,7 +448,7 @@ namespace Assets.Scripts
 
             prng = new System.Random(seedToUse);
 
-            SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, chunkResolution, chunk => { GenerateLobbyMaze(chunk, Vector2.zero); });
+            SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, chunkResolution, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
         }
     }

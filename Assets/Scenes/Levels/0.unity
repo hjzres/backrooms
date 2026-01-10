@@ -7912,7 +7912,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &728207794
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -21025,6 +21025,9 @@ MonoBehaviour:
   meshLength: 100
   chunkResolution: 1
   viewDistanceInChunks: 1
+  mazeSpawnChance: 50
+  repetitiveWallsSpawnChance: 50
+  pitfallsSpawnChance: 0
   useRandomSeed: 0
   useTestVisuals: 0
   seed: 2
