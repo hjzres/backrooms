@@ -130,6 +130,8 @@ namespace Assets.Scripts
         {
             public string name;
 
+            public GameObject gameObject;
+
             public GameObject prefab;
 
             public int maxSpawnChance;
@@ -159,7 +161,10 @@ namespace Assets.Scripts
         // Unfortunately has to be hard coded.
         private void AddDecorationsToList()
         {
-            decorations.Add(wallOutlet);
+            decorations = new List<Decoration>()
+            {
+                wallOutlet
+            };
         }
 
         private void LateUpdate()
@@ -306,20 +311,27 @@ namespace Assets.Scripts
             if (!generationChance) return;
 
             Decoration deco = decorations[index];
-            deco.prefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //deco.prefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wallScale *= 0.5f;
 
-            int side = prng.Next(1, 10) < 8 ? -1 : 1;
+            GameObject decoObj = Instantiate(deco.prefab);
+
+            int side = prng.Next(1, 10) < 5 ? -1 : 1;
 
             float offsetX = direction == Directions.UP_v || direction == Directions.DOWN_v ? 0.5f * side: 0;
             float offsetZ = direction == Directions.LEFT_v || direction == Directions.RIGHT_v ? -0.5f * side: 0;
 
-            float randOffsetX = offsetZ == 0 ? NextFloat(-wallScale + deco.offsetReductionXZ, wallScale - deco.offsetReductionXZ) : 0;
-            float randOffsetZ = offsetX == 0 ? NextFloat(-wallScale + deco.offsetReductionXZ, wallScale - deco.offsetReductionXZ) : 0;
+            float randOffsetZ = offsetZ == 0 ? NextFloat(-wallScale + deco.offsetReductionXZ, wallScale - deco.offsetReductionXZ) : 0;
+            float randOffsetX = offsetX == 0 ? NextFloat(-wallScale + deco.offsetReductionXZ, wallScale - deco.offsetReductionXZ) : 0;
 
-            Vector3 offsets = new Vector3(offsetX, wallOutlet.positionOffsetY, offsetZ);
-            deco.prefab.transform.position = wallPosition + offsets;
-            deco.prefab.transform.parent = parent;
+            Vector3 offsets = new Vector3(offsetX, wallOutlet.positionOffsetY, offsetZ + randOffsetZ);
+
+            float rotX = offsetX == 0 ? 90 : (offsetZ == 0 ? (side == -1 ? 180 : 0) : 0);
+            float rot = offsetZ == 0 ? (side == -1 ? 180 : 0) : (side == -1 ? 270 : 90);
+
+            decoObj.transform.rotation = Quaternion.Euler(deco.prefab.transform.rotation.x, deco.prefab.transform.rotation.y + rot, deco.prefab.transform.rotation.z);
+            decoObj.transform.position = wallPosition + offsets;
+            decoObj.transform.parent = parent;
         }
 
         private void UpdateClientChunks()
@@ -379,13 +391,12 @@ namespace Assets.Scripts
         public void GenerateTestChunk()
         {
             int seedToUse = useRandomSeed ? UnityEngine.Random.Range(0, 10000000) : seed;
+            AddDecorationsToList();
 
             prng = new System.Random(seedToUse);
 
             SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, resolution, chunk => { GenerateLobbyMaze(chunk); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
-
-            AddDecorationsToList();
         }
     }
 }
