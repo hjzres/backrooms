@@ -172,13 +172,38 @@ namespace Assets.Scripts
             UpdateClientChunks();
         }
 
-        private void GenerateLobbyMaze(SquareChunk chunk)
+        private void GenerateLobbyMaze(SquareChunk chunk, Vector2 coordinates)
         {
             startPoints = new List<Point>();
             startPoints.Clear();
 
-            RandomizeStartingPoints(chunk);
-            CreateWalls(chunk);
+            float noise = Mathf.Floor(WhiteNoise(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100);
+            bool rand = noise > 50;
+
+            if (rand)
+            {
+                RandomizeStartingPoints(chunk);
+                CreateWalls(chunk);
+            }
+        }
+
+        private float WhiteNoise(Vector2 value)
+        {
+            return WhiteNoise2DTo1D(value, new Vector2(12.9898f, 78.233f));
+        }
+
+        private float WhiteNoise2DTo1D(Vector2 value, Vector2 dotDirection)
+        {
+            Vector2 smallValue = new Vector2(Mathf.Sin(value.x), Mathf.Sin(value.y));
+            float rand = Vector2.Dot(smallValue, dotDirection);
+            rand = Frac(Mathf.Sin(rand) * 143758.5453f);
+
+            return rand;
+        }
+
+        private float Frac(float num)
+        {
+            return num - Mathf.Floor(num);
         }
 
         private void RandomizeStartingPoints(SquareChunk chunk)
@@ -342,7 +367,7 @@ namespace Assets.Scripts
                     if (!squareChunks.ContainsKey(coordinates))
                     {
                         Vector2 chunkPosition = coordinates * meshLength;
-                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyMaze(chunk); });
+                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyMaze(chunk, coordinates); });
                         chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
                         chunk.gameObject.transform.parent = generatedChunksContainer.transform;
 
@@ -354,12 +379,12 @@ namespace Assets.Scripts
             // AI assisted, I could not figure out how to disable them for the life of me.
             // Will definitely come back and rewrite this, as a foreach loop is kind of unoptimal
             // when I feel that it could be done in the nested loops instead.
-            foreach (var chunk in squareChunks) 
+            /*foreach (var chunk in squareChunks) 
             { 
                 Vector2Int delta = chunk.Key - clientChunkCoord; 
                 bool isWithinRange = Mathf.Abs(delta.x) <= viewDistanceInChunks && Mathf.Abs(delta.y) <= viewDistanceInChunks; 
                 chunk.Value.gameObject.SetActive(isWithinRange); 
-            }
+            }*/
         }
 
         private Vector2Int ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
@@ -389,7 +414,7 @@ namespace Assets.Scripts
 
             prng = new System.Random(seedToUse);
 
-            SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, chunkResolution, chunk => { GenerateLobbyMaze(chunk); });
+            SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, chunkResolution, chunk => { GenerateLobbyMaze(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
         }
     }
