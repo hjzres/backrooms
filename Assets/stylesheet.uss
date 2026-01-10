@@ -6,3 +6,7 @@
     font-size: 200%;
     width: 30%;
 }
+
+.SettingsText {
+    font-size: 100%;
+}
