@@ -387,12 +387,15 @@ namespace Assets.Scripts
             float min = -wallScaleFactor + deco.offsetReductionXZ;
             float max = wallScaleFactor - deco.offsetReductionXZ;
 
-            float randOffsetX = offsetX == 0 ? NextFloat(min, max) : 0;
-            float randOffsetZ = offsetZ == 0 ? NextFloat(min, max) : 0;
+            float randOffsetX = offsetX == 0 && deco.useOffsets ? NextFloat(min, max) : 0;
+            float randOffsetZ = offsetZ == 0 && deco.useOffsets ? NextFloat(min, max) : 0;
 
-            Vector3 offsets = new Vector3(offsetX + randOffsetX, wallOutlet.positionOffsetY, offsetZ + randOffsetZ);
+            float offsetY = deco.useOffsets ? wallOutlet.positionOffsetY : 0;
 
-            decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(deco.prefab.transform.rotation.x, deco.prefab.transform.rotation.y + rot, deco.prefab.transform.rotation.z));
+            Vector3 offsets = new Vector3(offsetX + randOffsetX, offsetY, offsetZ + randOffsetZ);
+            Quaternion currentRotation = decoObject.transform.rotation;
+
+            decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(currentRotation.x, currentRotation.y + rot, currentRotation.z));
             decoObject.isStatic = true;
         }
 
