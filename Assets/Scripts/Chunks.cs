@@ -23,16 +23,19 @@ namespace Assets.Scripts
 
             public GameObject gameObject;
 
+            public Transform transform;
+
             private readonly Action<SquareChunk> onCreate;
 
-            public SquareChunk(Vector2 position, int length, int resolution, Action<SquareChunk> onCreate)
+            public SquareChunk(Vector2 position, int length, int resolution, Material material, Action<SquareChunk> onCreate)
             {
                 Mesh mesh = new Mesh();
 
                 GameObject gameObject = new GameObject("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+                transform = gameObject.transform;
 
                 // Offset position to center chunk.
-                gameObject.transform.position = new Vector3(position.x - length * 0.5f, 0, position.y - length * 0.5f);
+                transform.position = new Vector3(position.x - length * 0.5f, 0, position.y - length * 0.5f);
 
                 Vector3[] vertices = new Vector3[(resolution + 1) * (resolution + 1)];
                 Vector3[] normals = new Vector3[(resolution + 1) * (resolution + 1)];
@@ -60,6 +63,8 @@ namespace Assets.Scripts
                 mesh.RecalculateNormals();
 
                 gameObject.GetComponent<MeshFilter>().mesh = mesh;
+                gameObject.GetComponent<MeshRenderer>().material = material;
+                gameObject.isStatic = true;
 
                 this.onCreate = onCreate;
                 onCreate?.Invoke(this);

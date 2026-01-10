@@ -60,13 +60,17 @@ namespace Assets.Scripts
         {
             public GameObject gameObject;
 
+            public Transform transform;
+
             private readonly Action<LobbyWall> onCreate;
 
             public LobbyWall(Vector3 position, Vector3 scale, Material material, Action<LobbyWall> onCreate)
             {
                 gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                gameObject.transform.position = position;
-                gameObject.transform.localScale = scale;
+                transform = gameObject.transform;
+                transform.position = position;
+                transform.localScale = scale;
+
                 gameObject.GetComponent<MeshRenderer>().material = material;
 
                 this.onCreate = onCreate;
@@ -93,8 +97,6 @@ namespace Assets.Scripts
         [Header("Chunking Properties")]
 
         [SerializeField] [Min(1)] private int meshLength = 1;
-
-        [SerializeField] [Min(1)] private int chunkResolution = 1;
 
         [SerializeField] private int viewDistanceInChunks = 1;
 
@@ -211,6 +213,16 @@ namespace Assets.Scripts
             {
                 GeneratePitfalls(chunk);
             }
+
+            GameObject ceilingContainer = new GameObject("Ceiling");
+            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, null);
+
+            ceiling.transform.parent = ceilingContainer.transform;
+            ceiling.gameObject.isStatic = true;
+
+            ceilingContainer.transform.parent = chunk.transform;
+            ceilingContainer.transform.position = new Vector3(ceilingContainer.transform.position.x, wallHeight, ceilingContainer.transform.position.z);
+            ceilingContainer.transform.rotation = Quaternion.Euler(180, 0, 0);
         }
 
         private void GenerateMaze(SquareChunk chunk)
@@ -254,7 +266,8 @@ namespace Assets.Scripts
                         {
                             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                             cube.transform.position = point.nextPosition;
-                            cube.transform.parent = chunk.gameObject.transform;
+                            cube.transform.parent = chunk.transform;
+                            cube.isStatic = true;
                         }
 
                         chance = 0f;
@@ -278,7 +291,7 @@ namespace Assets.Scripts
                 Vector3 previousDirection = Vector3.zero;
 
                 GameObject chainParent = new GameObject($"Chain {i + 1}");
-                chainParent.transform.parent = chunk.gameObject.transform;
+                chainParent.transform.parent = chunk.transform;
 
                 for (int j = 0; j < iterations; j++)
                 {
@@ -302,7 +315,8 @@ namespace Assets.Scripts
                         onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, wallPosition, previousDirection, chainParent.transform));
 
                     point.nextPosition += direction * length;
-                    wall.gameObject.transform.parent = chainParent.transform;
+                    wall.transform.parent = chainParent.transform;
+                    wall.gameObject.isStatic = true;
                 }
             }
 
@@ -366,6 +380,7 @@ namespace Assets.Scripts
             Vector3 offsets = new Vector3(offsetX + randOffsetX, wallOutlet.positionOffsetY, offsetZ + randOffsetZ);
 
             decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(deco.prefab.transform.rotation.x, deco.prefab.transform.rotation.y + rot, deco.prefab.transform.rotation.z));
+            decoObject.isStatic = true;
         }
 
         private void GenerateRepetitiveWalls(SquareChunk chunk)
@@ -386,7 +401,8 @@ namespace Assets.Scripts
                     Vector3 scale = new Vector3(1.5f, wallHeight, 1.5f);
 
                     LobbyWall wall = new LobbyWall(position, scale, arrowWallpaper, null);
-                    wall.gameObject.transform.parent = chunk.gameObject.transform;
+                    wall.gameObject.isStatic = true;
+                    wall.transform.parent = chunk.transform;
                 }
             }
         }
@@ -396,7 +412,7 @@ namespace Assets.Scripts
             Vector3 bottomLeft = new Vector3(chunk.position.x - (chunk.length * 0.5f), 0, chunk.position.y - (chunk.length * 0.5f));
 
             float spacing = (float)chunk.length / pitfallNumber;
-            chunk.gameObject.transform.position = new Vector3(chunk.gameObject.transform.position.x, -pitfallDepth, chunk.gameObject.transform.position.z);
+            chunk.transform.position = new Vector3(chunk.transform.position.x, -pitfallDepth, chunk.transform.position.z);
 
             for (int x = 0; x <= pitfallNumber; x++)
             {
@@ -410,10 +426,11 @@ namespace Assets.Scripts
                         LobbyWall wallX = new LobbyWall(
                             new Vector3(posX + spacing * 0.5f, pitfallDepth * -0.5f, posZ), 
                             new Vector3(spacing, pitfallDepth, pitfallThickness), 
-                            defaultMaterial, 
+                            carpet, 
                             null);
 
-                        wallX.gameObject.transform.parent = chunk.gameObject.transform;
+                        wallX.transform.parent = chunk.transform;
+                        wallX.gameObject.isStatic = true;
                     }
 
                     if (y < pitfallNumber)
@@ -421,10 +438,11 @@ namespace Assets.Scripts
                         LobbyWall wallZ = new LobbyWall(
                             new Vector3(posX, pitfallDepth * -0.5f, posZ + spacing * 0.5f), 
                             new Vector3(pitfallThickness, pitfallDepth, spacing), 
-                            defaultMaterial, 
+                            carpet, 
                             null);
 
-                        wallZ.gameObject.transform.parent = chunk.gameObject.transform;
+                        wallZ.transform.parent = chunk.transform;
+                        wallZ.gameObject.isStatic = true;
                     }
                 }
             }
@@ -443,10 +461,8 @@ namespace Assets.Scripts
                     if (!squareChunks.ContainsKey(coordinates))
                     {
                         Vector2 chunkPosition = coordinates * meshLength;
-                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, chunk => { GenerateLobbyLevel(chunk, coordinates); });
-                        chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
-                        chunk.gameObject.transform.parent = generatedChunksContainer.transform;
-
+                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, chunkPosition); });
+                        chunk.transform.parent = generatedChunksContainer.transform;
                         squareChunks.Add(coordinates, chunk);
                     }
                 }
@@ -490,8 +506,16 @@ namespace Assets.Scripts
 
             prng = new System.Random(seedToUse);
 
-            SquareChunk chunk = new SquareChunk(new Vector2(0, 0), meshLength, chunkResolution, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
+            SquareChunk chunk = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
+
+            GameObject ceilingContainer = new GameObject("Ceiling");
+            SquareChunk ceiling = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, null);
+
+            ceiling.gameObject.transform.parent = ceilingContainer.transform;
+            ceilingContainer.transform.parent = chunk.transform;
+            ceilingContainer.transform.position = new Vector3(ceilingContainer.transform.position.x, wallHeight, ceilingContainer.transform.position.z);
+            ceilingContainer.transform.rotation = Quaternion.Euler(180, 0, 0);
         }
     }
 }
