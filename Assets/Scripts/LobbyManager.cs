@@ -82,13 +82,19 @@ namespace Assets.Scripts
         {
             public GameObject prefab;
 
+            public GameObject gameObject;
+
             public int spawnChance; // Interpret as 1 / spawnChance.
 
             public float positionOffsetY;
 
             public float offsetReductionXZ;
 
-            public bool useOffsets;
+            public bool useRandomOffsets;
+
+            [HideInInspector] public Vector3 sphereCastPosition;
+
+            [HideInInspector] public Vector3 facingDirection;
         }
 
         // ------------------------------------------------------------------------------------------- //
@@ -160,6 +166,11 @@ namespace Assets.Scripts
         [SerializeField] private Material carpet;
 
         [Header("Wall Decorations")]
+
+        [SerializeField] private bool useSphereCastGizmo = false;
+
+        [SerializeField] private float castRadius = 1.0f;
+
         [SerializeField] private Decoration wallOutlet; // 13, -2, 0.
 
         // ------------------------------------------------------------------------------------------- //
@@ -174,11 +185,14 @@ namespace Assets.Scripts
 
         private List<Decoration> decorations;
 
+        private List<Decoration> decorationsTracker;
+
         // ------------------------------------------------------------------------------------------- //
 
         private void Awake()
         {
             squareChunks = new Dictionary<Vector2Int, SquareChunk>();
+            decorationsTracker = new List<Decoration>();
 
             generatedChunksContainer = new GameObject("Generated Chunks");
             prng = new System.Random(seed);
@@ -237,6 +251,7 @@ namespace Assets.Scripts
 
             RandomizeStartingPoints(chunk);
             CreateWalls(chunk);
+            CheckDecorationCollisions();
         }
 
         private void RandomizeStartingPoints(SquareChunk chunk)
@@ -372,31 +387,73 @@ namespace Assets.Scripts
             }
 
             Decoration deco = decorations[decorationIndex];
-            wallScaleFactor *= 0.4f; // Decrease random offset area.
-
-            GameObject decoObject = Instantiate(deco.prefab, parent);
+            GameObject decoObject = Instantiate(deco.prefab);
 
             int randomSide = prng.Next(1, 10) < 5 ? -1 : 1;
 
-            float offsetX = wallDirection == Directions.UP_v || wallDirection == Directions.DOWN_v ? 0.5f * randomSide: 0;
-            float offsetZ = wallDirection == Directions.LEFT_v || wallDirection == Directions.RIGHT_v ? -0.5f * randomSide: 0;
+            float offsetX = wallDirection == Directions.UP_v || wallDirection == Directions.DOWN_v ? 0.5f * randomSide : 0;
+            float offsetZ = wallDirection == Directions.LEFT_v || wallDirection == Directions.RIGHT_v ? -0.5f * randomSide : 0;
 
-            // All prefabs must be offset in the +x direction, with the main face looking in that direction and the origin at (0,0,0).
-            float rot = offsetZ == 0 ? (randomSide == -1 ? 180 : 0) : (randomSide == -1 ? 270 : 90);
-
+            wallScaleFactor *= 0.4f; // Decrease random offset area.
             float min = -wallScaleFactor + deco.offsetReductionXZ;
             float max = wallScaleFactor - deco.offsetReductionXZ;
 
-            float randOffsetX = offsetX == 0 && deco.useOffsets ? NextFloat(min, max) : 0;
-            float randOffsetZ = offsetZ == 0 && deco.useOffsets ? NextFloat(min, max) : 0;
+            float randOffsetX = offsetX == 0 && deco.useRandomOffsets ? NextFloat(min, max) : 0;
+            float randOffsetZ = offsetZ == 0 && deco.useRandomOffsets ? NextFloat(min, max) : 0;
 
-            float offsetY = deco.useOffsets ? wallOutlet.positionOffsetY : 0;
+            Vector3 offsets = new Vector3(offsetX + randOffsetX, deco.positionOffsetY, offsetZ + randOffsetZ);
+            Vector3 sphereCastOffset = new Vector3(wallPosition.x + offsets.x * (castRadius + 1), wallPosition.y + offsets.y, wallPosition.z + offsets.z * (castRadius + 1));
 
-            Vector3 offsets = new Vector3(offsetX + randOffsetX, offsetY, offsetZ + randOffsetZ);
+            // All prefabs must be offset in the +x direction, with the main face looking in that direction and the origin at (0,0,0).
             Quaternion currentRotation = decoObject.transform.rotation;
+            float rot = offsetZ == 0 ? (randomSide == -1 ? 180 : 0) : (randomSide == -1 ? 270 : 90);
 
             decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(currentRotation.x, currentRotation.y + rot, currentRotation.z));
+            decoObject.transform.parent = parent;
             decoObject.isStatic = true;
+
+            deco.sphereCastPosition = sphereCastOffset;
+            deco.facingDirection = decoObject.transform.right;
+            deco.gameObject = decoObject;
+            decorationsTracker.Add(deco);
+        }
+
+        private void CheckDecorationCollisions()
+        {
+            for (int i = 0; i < decorationsTracker.Count; i++)
+            {
+                RaycastHit raycastHit = new RaycastHit();
+                bool cast = Physics.SphereCast(decorationsTracker[i].sphereCastPosition, castRadius, decorationsTracker[i].facingDirection, out raycastHit);
+
+                if (cast)
+                {
+                    if (Application.isPlaying)
+                    {
+                        Destroy(decorationsTracker[i].gameObject);
+                        continue;
+                    }
+
+                    DestroyImmediate(decorationsTracker[i].gameObject);
+                }
+            }
+
+            decorationsTracker.Clear();
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (decorationsTracker != null)
+            {
+                return;
+            }
+
+            if (useSphereCastGizmo)
+            {
+                for (int i = 0; i < decorationsTracker.Count; i++)
+                {
+                    Gizmos.DrawWireSphere(decorationsTracker[i].sphereCastPosition + decorationsTracker[i].facingDirection, castRadius);
+                }
+            }
         }
 
         private void GenerateRepetitiveWalls(SquareChunk chunk)
@@ -520,6 +577,7 @@ namespace Assets.Scripts
             AddDecorationsToList();
 
             prng = new System.Random(seedToUse);
+            decorationsTracker = new List<Decoration>();
 
             SquareChunk chunk = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
