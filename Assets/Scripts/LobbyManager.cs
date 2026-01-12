@@ -173,6 +173,10 @@ namespace Assets.Scripts
 
         [SerializeField] private Decoration wallOutlet; // 13, -2, 0.
 
+        [Header("Light Properties")]
+
+        [SerializeField] private int lightNumber;
+
         // ------------------------------------------------------------------------------------------- //
 
         private GameObject generatedChunksContainer;
@@ -227,11 +231,15 @@ namespace Assets.Scripts
                 GeneratePitfalls(chunk);
             }
 
-            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, ceiling => AddLightsToCeiling(chunk));
+            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, null);
             ceiling.gameObject.name = "Ceiling";
             ceiling.transform.SetPositionAndRotation(new Vector3(ceiling.transform.position.x, wallHeight, ceiling.transform.position.z + meshLength), Quaternion.Euler(new Vector3(180, 0, 0)));
             ceiling.transform.parent = chunk.transform;
             ceiling.gameObject.isStatic = true;
+
+            // Check Chunk ID THEN run AddLightsOnCeiling (exclude that of pitfalls for aura).
+            // Make a chance for no lights to spawn based on noise?
+            AddLightsToCeiling(ceiling);
         }
 
         private void GenerateMaze(SquareChunk chunk)
@@ -494,7 +502,7 @@ namespace Assets.Scripts
             }
         }
 
-        private void AddLightsToCeiling(SquareChunk chunk)
+        private void AddLightsToCeiling(SquareChunk ceiling)
         {
             
         }
