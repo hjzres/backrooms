@@ -227,15 +227,11 @@ namespace Assets.Scripts
                 GeneratePitfalls(chunk);
             }
 
-            GameObject ceilingContainer = new GameObject("Ceiling");
-            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, null);
-
-            ceiling.transform.parent = ceilingContainer.transform;
+            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, ceiling => AddLightsToCeiling(chunk));
+            ceiling.gameObject.name = "Ceiling";
+            ceiling.transform.SetPositionAndRotation(new Vector3(ceiling.transform.position.x, wallHeight, ceiling.transform.position.z + meshLength), Quaternion.Euler(new Vector3(180, 0, 0)));
+            ceiling.transform.parent = chunk.transform;
             ceiling.gameObject.isStatic = true;
-
-            ceilingContainer.transform.parent = chunk.transform;
-            ceilingContainer.transform.SetPositionAndRotation(new Vector3(ceilingContainer.transform.position.x, wallHeight, ceilingContainer.transform.position.z), Quaternion.Euler(180, 0, 0));
-            ceilingContainer.isStatic = true;
         }
 
         private void GenerateMaze(SquareChunk chunk)
@@ -498,6 +494,11 @@ namespace Assets.Scripts
             }
         }
 
+        private void AddLightsToCeiling(SquareChunk chunk)
+        {
+            
+        }
+
         private void UpdateClientChunks()
         {
             Vector2Int clientChunkCoord = ComputeCliendChunkCoords(player.position, meshLength);
@@ -578,14 +579,6 @@ namespace Assets.Scripts
 
             SquareChunk chunk = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
-
-            GameObject ceilingContainer = new GameObject("Ceiling");
-            SquareChunk ceiling = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, null);
-
-            ceiling.gameObject.transform.parent = ceilingContainer.transform;
-            ceilingContainer.transform.parent = chunk.transform;
-            ceilingContainer.transform.position = new Vector3(ceilingContainer.transform.position.x, wallHeight, ceilingContainer.transform.position.z);
-            ceilingContainer.transform.rotation = Quaternion.Euler(180, 0, 0);
         }
     }
 }
