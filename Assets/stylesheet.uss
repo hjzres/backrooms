@@ -10,3 +10,10 @@
 .SettingsText {
     font-size: 100%;
 }
+
+#Container > #Background > #Settings > #Private > .unity-toggle__input {
+    justify-content: flex-end;
+}
+
+#Container > #Background > #Settings > #Private > .unity-toggle__input > #unity-checkmark {
+}
