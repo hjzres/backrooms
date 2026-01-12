@@ -7,23 +7,25 @@ namespace Assets.Scripts
     {
         public class SquareChunk
         {
-            public Vector2 position;
-
-            public Vector3[] vertices;
-
-            public Vector3[] normals;
-
-            public Vector2[] uvs;
-
-            public int[] triangles;
+            public int ID;
 
             public int resolution;
 
             public int length;
 
+            public Vector2 position;
+
             public GameObject gameObject;
 
             public Transform transform;
+
+            public readonly Vector3[] vertices;
+
+            private readonly Vector3[] normals;
+
+            private readonly Vector2[] uvs;
+
+            private readonly int[] triangles;
 
             private readonly Action<SquareChunk> onCreate;
 

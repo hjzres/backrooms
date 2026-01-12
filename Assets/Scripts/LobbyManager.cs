@@ -13,6 +13,11 @@ namespace Assets.Scripts
         NONE, UP, DOWN, LEFT, RIGHT
     }
 
+    public enum ChunkID
+    {
+        MAZE, REPETITIVE, PITFALL
+    }
+
     public class LobbyManager : MonoBehaviour
     {
         private readonly struct Directions
@@ -95,6 +100,11 @@ namespace Assets.Scripts
             [HideInInspector] public Vector3 sphereCastPosition;
 
             [HideInInspector] public Vector3 facingDirection;
+        }
+
+        public struct CeilingLight
+        {
+            
         }
 
         // ------------------------------------------------------------------------------------------- //
@@ -215,20 +225,24 @@ namespace Assets.Scripts
         private void GenerateLobbyLevel(SquareChunk chunk, Vector2 coordinates)
         {
             float noise = Noise.WhiteNoise2D(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100;
+            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
 
             if (noise < mazeSpawnChance)
             {
-                GenerateMaze(chunk);
+                chunk.ID = (int)ChunkID.MAZE;   
+                GenerateMaze(chunk, bottomLeft);
             }
 
             else if (noise >= mazeSpawnChance && noise < mazeSpawnChance + repetitiveWallsSpawnChance)
             {
-                GenerateRepetitiveWalls(chunk);
+                chunk.ID = (int)ChunkID.REPETITIVE;
+                GenerateRepetitiveWalls(chunk, bottomLeft);
             }
 
             else if (noise >= repetitiveWallsSpawnChance && noise <= mazeSpawnChance + repetitiveWallsSpawnChance + pitfallsSpawnChance)
             {
-                GeneratePitfalls(chunk);
+                chunk.ID = (int)ChunkID.PITFALL;
+                GeneratePitfalls(chunk, bottomLeft);
             }
 
             SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, null);
@@ -239,23 +253,24 @@ namespace Assets.Scripts
 
             // Check Chunk ID THEN run AddLightsOnCeiling (exclude that of pitfalls for aura).
             // Make a chance for no lights to spawn based on noise?
-            AddLightsToCeiling(ceiling);
+            if (chunk.ID != (int)ChunkID.PITFALL)
+            {
+                AddLightsToCeiling(chunk, bottomLeft);   
+            }
         }
 
-        private void GenerateMaze(SquareChunk chunk)
+        private void GenerateMaze(SquareChunk chunk, Vector2 bottomLeft)
         {
             startPoints = new List<Point>();
             startPoints.Clear();
 
-            RandomizeStartingPoints(chunk);
+            RandomizeStartingPoints(chunk, bottomLeft);
             CreateWalls(chunk);
             CheckDecorationCollisions();
         }
 
-        private void RandomizeStartingPoints(SquareChunk chunk)
+        private void RandomizeStartingPoints(SquareChunk chunk, Vector2 bottomLeft)
         {
-            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
-
             float spacing = (float)chunk.length / segments;
             float chance = 0f;
 
@@ -438,10 +453,8 @@ namespace Assets.Scripts
             decorationsTracker.Clear();
         }
 
-        private void GenerateRepetitiveWalls(SquareChunk chunk)
+        private void GenerateRepetitiveWalls(SquareChunk chunk, Vector2 bottomLeft)
         {
-            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
-
             float spacing = (float)chunk.length / repetitiveWallSegments;
 
             for (int x = 0; x <= repetitiveWallSegments; x++)
@@ -458,10 +471,8 @@ namespace Assets.Scripts
             }
         }
 
-        private void GeneratePitfalls(SquareChunk chunk)
+        private void GeneratePitfalls(SquareChunk chunk, Vector2 bottomLeft)
         {
-            Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
-
             float spacing = (float)chunk.length / pitfallNumber;
             chunk.transform.position = new Vector3(chunk.transform.position.x, -pitfallDepth, chunk.transform.position.z);
 
@@ -502,9 +513,26 @@ namespace Assets.Scripts
             }
         }
 
-        private void AddLightsToCeiling(SquareChunk ceiling)
+        private void AddLightsToCeiling(SquareChunk chunk, Vector2 bottomLeft)
         {
-            
+            float spacing = (float)chunk.length / lightNumber;
+
+            GameObject lightContainer = new GameObject("Lights");
+            lightContainer.transform.parent = chunk.transform;
+
+            for (int x = 0; x < lightNumber; x++)
+            {
+                for (int y = 0; y < lightNumber; y++)
+                {
+                    float posX = bottomLeft.x + x * spacing;
+                    float posZ = bottomLeft.y + y * spacing;
+
+                    // Light prefab placeholder
+                    GameObject light = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    light.transform.position = new Vector3(posX, wallHeight, posZ);
+                    light.transform.parent = lightContainer.transform;
+                }
+            }
         }
 
         private void UpdateClientChunks()
