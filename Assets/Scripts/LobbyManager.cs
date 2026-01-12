@@ -82,7 +82,7 @@ namespace Assets.Scripts
         {
             public GameObject prefab;
 
-            public GameObject gameObject;
+            [HideInInspector] public GameObject gameObject;
 
             public int spawnChance; // Interpret as 1 / spawnChance.
 
@@ -197,21 +197,15 @@ namespace Assets.Scripts
             generatedChunksContainer = new GameObject("Generated Chunks");
             prng = new System.Random(seed);
 
-            AddDecorationsToList();
+            decorations = new List<Decoration>()
+            {
+                wallOutlet
+            };
         }
 
         private void LateUpdate()
         {
             UpdateClientChunks();
-        }
-
-        // Unfortunately has to be hard coded.
-        private void AddDecorationsToList()
-        {
-            decorations = new List<Decoration>()
-            {
-                wallOutlet
-            };
         }
 
         private void GenerateLobbyLevel(SquareChunk chunk, Vector2 coordinates)
@@ -440,22 +434,6 @@ namespace Assets.Scripts
             decorationsTracker.Clear();
         }
 
-        private void OnDrawGizmos()
-        {
-            if (decorationsTracker != null)
-            {
-                return;
-            }
-
-            if (useSphereCastGizmo)
-            {
-                for (int i = 0; i < decorationsTracker.Count; i++)
-                {
-                    Gizmos.DrawWireSphere(decorationsTracker[i].sphereCastPosition + decorationsTracker[i].facingDirection, castRadius);
-                }
-            }
-        }
-
         private void GenerateRepetitiveWalls(SquareChunk chunk)
         {
             Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
@@ -570,11 +548,30 @@ namespace Assets.Scripts
             return (float)(min + prng.NextDouble() * range);
         }
 
+        private void OnDrawGizmos()
+        {
+            if (decorationsTracker != null)
+            {
+                return;
+            }
+
+            if (useSphereCastGizmo)
+            {
+                for (int i = 0; i < decorationsTracker.Count; i++)
+                {
+                    Gizmos.DrawWireSphere(decorationsTracker[i].sphereCastPosition + decorationsTracker[i].facingDirection, castRadius);
+                }
+            }
+        }
+
         [Button]
         public void GenerateTestChunk()
         {
             int seedToUse = useRandomSeed ? UnityEngine.Random.Range(0, 10000000) : seed;
-            AddDecorationsToList();
+            decorations = new List<Decoration>()
+            {
+                wallOutlet
+            };
 
             prng = new System.Random(seedToUse);
             decorationsTracker = new List<Decoration>();
