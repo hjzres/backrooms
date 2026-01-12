@@ -168,7 +168,7 @@ Material:
     - _SrcBlendAlpha: 1
     - _Steps: 4
     - _Surface: 0
-    - _Tiling: 0.179
+    - _Tiling: 0.106
     - _Use_Specular_Gloss_Texture: 0
     - _Use_Specular_Map: 0
     - _Use_XY_Height: 0

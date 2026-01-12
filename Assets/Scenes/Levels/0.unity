@@ -443,7 +443,7 @@ MonoBehaviour:
   arrowWallpaper: {fileID: 2100000, guid: cc2c8511faccf034f9e61816861711d1, type: 2}
   carpet: {fileID: 2100000, guid: c028f654dafceaa46a5028f6c2b002d2, type: 2}
   useSphereCastGizmo: 0
-  castRadius: 2
+  castRadius: 10
   wallOutlet:
     prefab: {fileID: 5741710243832223666, guid: 41439bccbd9c0aa43a06269f8bcd4e04, type: 3}
     gameObject: {fileID: 0}

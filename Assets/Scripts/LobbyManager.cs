@@ -2,6 +2,7 @@ using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
 using static Assets.Scripts.Chunks;
 
 namespace Assets.Scripts
@@ -104,7 +105,13 @@ namespace Assets.Scripts
 
         public struct CeilingLight
         {
-            
+            public GameObject prefab;
+
+            [HideInInspector] public GameObject gameObject;
+
+            [HideInInspector] public Vector3 sphereCastingPosition;
+
+            [HideInInspector] public Vector3 castDirection;   
         }
 
         // ------------------------------------------------------------------------------------------- //
@@ -255,7 +262,7 @@ namespace Assets.Scripts
             // Make a chance for no lights to spawn based on noise?
             if (chunk.ID != (int)ChunkID.PITFALL)
             {
-                AddLightsToCeiling(chunk, bottomLeft);   
+                AddLightsToCeiling(chunk, bottomLeft);
             }
         }
 
@@ -527,10 +534,12 @@ namespace Assets.Scripts
                     float posX = bottomLeft.x + x * spacing;
                     float posZ = bottomLeft.y + y * spacing;
 
+                    Vector3 position = new Vector3(posX, wallHeight, posZ);
+
                     // Light prefab placeholder
                     GameObject light = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    light.transform.position = new Vector3(posX, wallHeight, posZ);
-                    light.transform.parent = lightContainer.transform;
+                    light.transform.position = position;
+                    light.isStatic = true;
                 }
             }
         }
@@ -587,7 +596,7 @@ namespace Assets.Scripts
 
         private void OnDrawGizmos()
         {
-            if (decorationsTracker != null)
+            if (decorationsTracker == null)
             {
                 return;
             }
