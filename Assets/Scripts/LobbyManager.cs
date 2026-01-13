@@ -80,6 +80,7 @@ namespace Assets.Scripts
                 transform.localScale = scale;
 
                 gameObject.GetComponent<MeshRenderer>().material = material;
+                gameObject.isStatic = true;
 
                 this.onCreate = onCreate;
                 onCreate?.Invoke(this);
@@ -356,17 +357,10 @@ namespace Assets.Scripts
                     Vector3 position = point.nextPosition + 0.5f * length * direction;
                     Vector3 scale = new Vector3(xAxisScale, wallHeight, zAxisScale);
 
-                    LobbyWall wall = new LobbyWall(
-                        position, 
-                        scale, 
-                        arrowWallpaper, 
-                        onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, position, previousDirection, chainParent.transform)
-                    );
-
-                    point.nextPosition += direction * length;
+                    LobbyWall wall = new LobbyWall(position, scale, arrowWallpaper, onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, position, previousDirection, chainParent.transform));
                     wall.transform.parent = chainParent.transform;
-                    wall.gameObject.layer = 4;
-                    wall.gameObject.isStatic = true;
+                    wall.gameObject.layer = 4; // TEMPORARY
+                    point.nextPosition += direction * length;
                 }
             }
 
@@ -476,7 +470,6 @@ namespace Assets.Scripts
 
                     LobbyWall wall = new LobbyWall(position, scale, arrowWallpaper, null);
                     wall.transform.parent = chunk.transform;
-                    wall.gameObject.isStatic = true;
                 }
             }
         }
@@ -490,34 +483,20 @@ namespace Assets.Scripts
             {
                 for (int y = 0; y <= pitfallNumber; y++)
                 {
-                    float posOffset = spacing * 0.5f;
                     float posX = bottomLeft.x + x * spacing;
                     float posZ = bottomLeft.y + y * spacing;
+                    float offset = spacing * 0.5f;
 
                     if (x < pitfallNumber)
                     {
-                        LobbyWall wallX = new LobbyWall(
-                            new Vector3(posX + posOffset, pitfallDepth * -0.5f, posZ), 
-                            new Vector3(spacing, pitfallDepth, pitfallThickness), 
-                            carpet, 
-                            null
-                        );
-
+                        LobbyWall wallX = new LobbyWall(new Vector3(posX + offset, pitfallDepth * -0.5f, posZ), new Vector3(spacing, pitfallDepth, pitfallThickness), carpet, null);
                         wallX.transform.parent = chunk.transform;
-                        wallX.gameObject.isStatic = true;
                     }
 
                     if (y < pitfallNumber)
                     {
-                        LobbyWall wallZ = new LobbyWall(
-                            new Vector3(posX, pitfallDepth * -0.5f, posZ + posOffset), 
-                            new Vector3(pitfallThickness, pitfallDepth, spacing), 
-                            carpet, 
-                            null
-                        );
-
+                        LobbyWall wallZ = new LobbyWall(new Vector3(posX, pitfallDepth * -0.5f, posZ + offset), new Vector3(pitfallThickness, pitfallDepth, spacing), carpet, null);
                         wallZ.transform.parent = chunk.transform;
-                        wallZ.gameObject.isStatic = true;
                     }
                 }
             }
@@ -540,20 +519,20 @@ namespace Assets.Scripts
                     Vector3 position = new Vector3(posX, wallHeight, posZ);
                     Vector3 castPosition = position + new Vector3(0, 5, 0);
 
-                    StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lightCastMask, () => CreatePrefab(position, lightContainer.transform)));
+                    StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lightCastMask, () => CreatePrefab(position, Vector3.zero, lightContainer.transform)));
                 }
             }
         }
 
-        private void CreatePrefab(Vector3 position, Transform parent)
+        private void CreatePrefab(Vector3 position, Vector3 eulerAngles, Transform parent)
         {
             GameObject prefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            prefab.transform.position = position;
+            prefab.transform.SetPositionAndRotation(position, Quaternion.Euler(eulerAngles));
             prefab.transform.parent = parent;
             prefab.isStatic = true;
         }
 
-        private IEnumerator SphereCastCollisionCheck(float delayTime, Vector3 castPosition, float radius, Vector3 castDirection, float maxDistance, LayerMask mask, Action conditionalLogic)
+        private IEnumerator SphereCastCollisionCheck(float delayTime, Vector3 castPosition, float radius, Vector3 castDirection, float maxDistance, LayerMask mask, Action logic)
         {
             yield return new WaitForSecondsRealtime(delayTime);
 
@@ -562,7 +541,7 @@ namespace Assets.Scripts
 
             if (!castHit)
             {
-                conditionalLogic?.Invoke();
+                logic?.Invoke();
             }
         }
 
