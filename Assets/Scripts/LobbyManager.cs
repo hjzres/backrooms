@@ -403,7 +403,7 @@ namespace Assets.Scripts
             }
 
             Decoration deco = decorations[decorationIndex];
-            GameObject decoObject = Instantiate(deco.prefab);
+            //GameObject decoObject = Instantiate(deco.prefab);
 
             int randomSide = prng.Next(1, 10) < 5 ? -1 : 1;
 
@@ -421,17 +421,20 @@ namespace Assets.Scripts
             Vector3 sphereCastOffset = new Vector3(wallPosition.x + offsets.x * (decorationSphereCastRadius + 1), wallPosition.y + offsets.y, wallPosition.z + offsets.z * (decorationSphereCastRadius + 1));
 
             // All prefabs must be offset in the +x direction, with the main face looking in that direction and the origin at (0,0,0).
-            Quaternion currentRotation = decoObject.transform.rotation;
+            Quaternion currentRotation = Quaternion.Euler(0, 0, 0);
             float rot = offsetZ == 0 ? (randomSide == -1 ? 180 : 0) : (randomSide == -1 ? 270 : 90);
+            Vector3 localForward = rot == 0 ? Directions.RIGHT_v : (rot == 180 ? Directions.LEFT_v : (rot == 270 ? Directions.DOWN_v : Directions.UP_v));
 
-            decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(currentRotation.x, currentRotation.y + rot, currentRotation.z));
-            decoObject.transform.parent = parent;
-            decoObject.isStatic = true;
+            StartCoroutine(SphereCastCollisionCheck(1f, sphereCastOffset, decorationSphereCastRadius, localForward, decorationSphereCastDistance, decorationCastMask, () => CreatePrefab(wallPosition + offsets, new Vector3(currentRotation.x, currentRotation.y + rot, currentRotation.z), null)));
 
-            deco.sphereCastPosition = sphereCastOffset;
-            deco.facingDirection = decoObject.transform.right;
-            deco.gameObject = decoObject;
-            decorationsTracker.Add(deco);
+            //decoObject.transform.SetPositionAndRotation(wallPosition + offsets, Quaternion.Euler(currentRotation.x, currentRotation.y + rot, currentRotation.z));
+            //decoObject.transform.parent = parent;
+            //decoObject.isStatic = true;
+
+            //deco.sphereCastPosition = sphereCastOffset;
+            //deco.facingDirection = decoObject.transform.right;
+            //deco.gameObject = decoObject;
+            //decorationsTracker.Add(deco);
         }
 
         // Make better
