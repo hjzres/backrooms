@@ -419,21 +419,18 @@ MonoBehaviour:
   player: {fileID: 1844967532}
   meshLength: 100
   viewDistanceInChunks: 1
-  mazeSpawnChance: 100
-  repetitiveWallsSpawnChance: 0
-  pitfallsSpawnChance: 0
+  mazeSpawnChance: 90
+  repetitiveWallsSpawnChance: 5
+  pitfallsSpawnChance: 5
   useRandomSeed: 0
   useTestVisuals: 0
   seed: 2
   segments: 18
   chanceThreshold: 4
-  minChance: 0.1
-  maxChance: 1
   wallHeight: 7
-  minWallChain: 4
-  maxWallChain: 7
-  minWallLength: 3
-  maxWallLength: 8
+  pointChance: {x: 0.1, y: 1}
+  wallChainRange: {x: 3, y: 7}
+  wallLengthRange: {x: 3, y: 8}
   repetitiveWallSegments: 14
   repetitiveWallsThickness: 1.5
   pitfallNumber: 8

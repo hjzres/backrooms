@@ -133,19 +133,13 @@ namespace Assets.Scripts
 
         [SerializeField] private float chanceThreshold = 1.0f;
 
-        [SerializeField] private float minChance;
-
-        [SerializeField] private float maxChance;
-
         [SerializeField] private float wallHeight = 1.0f;
 
-        [SerializeField] private int minWallChain = 1;
+        [SerializeField] private Vector2 pointChance = new Vector2(0.1f, 1);
 
-        [SerializeField] private int maxWallChain = 3;
-
-        [SerializeField] private int minWallLength = 3;
-
-        [SerializeField] private int maxWallLength = 8;
+        [SerializeField] private Vector2Int wallChainRange = new Vector2Int(3, 7);
+        
+        [SerializeField] private Vector2Int wallLengthRange = new Vector2Int(3, 8);
 
         [Header("Repetitive Walls Properties")]
 
@@ -277,13 +271,13 @@ namespace Assets.Scripts
             {
                 for (int y = 0; y <= segments; y++)
                 {
-                    if ((x == 0 || x == segments || y == 0 || y == segments) && chance > minChance)
+                    if ((x == 0 || x == segments || y == 0 || y == segments) && chance > pointChance.x)
                     {
-                        chance -= minChance;
+                        chance -= pointChance.x;
                         continue;
                     }
 
-                    chance += NextFloat(minChance, maxChance);
+                    chance += NextFloat(pointChance.x, pointChance.y);
 
                     if (chance >= chanceThreshold)
                     {
@@ -319,7 +313,7 @@ namespace Assets.Scripts
 
             for (int i = 0; i < startPoints.Count; i++)
             {
-                int iterations = prng.Next(minWallChain, maxWallChain);
+                int iterations = prng.Next(wallChainRange.x, wallChainRange.y);
 
                 Point point = startPoints[i];
                 Vector3 previousDirection = Vector3.zero;
@@ -332,7 +326,7 @@ namespace Assets.Scripts
                     point.nextDirection = point.RandomizeDirection(prng);
                     Vector3 direction = GetDirectionForNextWall(point, previousDirection);
 
-                    int length = prng.Next(minWallLength, maxWallLength);
+                    int length = prng.Next(wallLengthRange.x, wallLengthRange.y);
 
                     // Adding +1 simplifies the code and overlaps the walls, but due to the material it will not be noticeable.
                     int xAxisScale = point.nextDirection == NextDirection.LEFT || point.nextDirection == NextDirection.RIGHT ? length + 1 : 1;
