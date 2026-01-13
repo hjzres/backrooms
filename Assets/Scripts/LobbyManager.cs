@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
@@ -194,6 +195,10 @@ namespace Assets.Scripts
 
         [SerializeField] private int lightNumber;
 
+        [SerializeField] private float lightSphereCastRadius = 1f;
+
+        [SerializeField] private float lightSphereCastDistance = 10f;
+
         // ------------------------------------------------------------------------------------------- //
 
         private GameObject generatedChunksContainer;
@@ -208,12 +213,15 @@ namespace Assets.Scripts
 
         private List<Decoration> decorationsTracker;
 
+        private List<CeilingLight> ceilingLightTracker;
+
         // ------------------------------------------------------------------------------------------- //
 
         private void Awake()
         {
             squareChunks = new Dictionary<Vector2Int, SquareChunk>();
             decorationsTracker = new List<Decoration>();
+            ceilingLightTracker = new List<CeilingLight>();
 
             generatedChunksContainer = new GameObject("Generated Chunks");
             prng = new System.Random(seed);
@@ -263,6 +271,7 @@ namespace Assets.Scripts
             if (chunk.ID != (int)ChunkID.PITFALL)
             {
                 AddLightsToCeiling(chunk, bottomLeft);
+                StartCoroutine(CheckCeilingLightCollisions());
             }
         }
 
@@ -364,6 +373,7 @@ namespace Assets.Scripts
 
                     point.nextPosition += direction * length;
                     wall.transform.parent = chainParent.transform;
+                    wall.gameObject.layer = 4;
                     wall.gameObject.isStatic = true;
                 }
             }
@@ -534,14 +544,48 @@ namespace Assets.Scripts
                     float posX = bottomLeft.x + x * spacing;
                     float posZ = bottomLeft.y + y * spacing;
 
-                    Vector3 position = new Vector3(posX, wallHeight, posZ);
+                    Vector3 position = new Vector3(posX, wallHeight + 10, posZ);
+
+                    Vector3 castPosition = position + new Vector3(0, 10, 0);
+
+                    CeilingLight ceilingLight = new CeilingLight();
+                    ceilingLight.sphereCastingPosition = position;
+                    ceilingLight.castDirection = Vector3.down.normalized;
 
                     // Light prefab placeholder
                     GameObject light = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    light.transform.position = position;
+                    light.transform.position = position - new Vector3(0, 10, 0);
                     light.isStatic = true;
+
+                    ceilingLight.gameObject = light;
+                    ceilingLightTracker.Add(ceilingLight);
                 }
             }
+        }
+
+        private IEnumerator CheckCeilingLightCollisions()
+        {
+            yield return new WaitForSecondsRealtime(0.01f);
+
+            for (int i = 0; i < ceilingLightTracker.Count; i++)
+            {
+                RaycastHit raycastHit = new RaycastHit();
+                bool cast = Physics.SphereCast(ceilingLightTracker[i].sphereCastingPosition, lightSphereCastRadius, ceilingLightTracker[i].castDirection, out raycastHit, lightSphereCastDistance, LayerMask.GetMask("Water"));
+
+                if (cast)
+                {
+                    if (Application.isPlaying)
+                    {
+                        Destroy(ceilingLightTracker[i].gameObject);
+                        continue;
+                    }
+
+                    DestroyImmediate(ceilingLightTracker[i].gameObject);
+                    continue;
+                }
+            }
+
+            ceilingLightTracker.Clear();
         }
 
         private void UpdateClientChunks()
@@ -621,6 +665,7 @@ namespace Assets.Scripts
 
             prng = new System.Random(seedToUse);
             decorationsTracker = new List<Decoration>();
+            ceilingLightTracker = new List<CeilingLight>();
 
             SquareChunk chunk = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
