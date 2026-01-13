@@ -442,18 +442,23 @@ MonoBehaviour:
   defaultMaterial: {fileID: 2100000, guid: c028f654dafceaa46a5028f6c2b002d2, type: 2}
   arrowWallpaper: {fileID: 2100000, guid: cc2c8511faccf034f9e61816861711d1, type: 2}
   carpet: {fileID: 2100000, guid: c028f654dafceaa46a5028f6c2b002d2, type: 2}
-  useSphereCastGizmo: 0
-  castRadius: 10
   wallOutlet:
     prefab: {fileID: 5741710243832223666, guid: 41439bccbd9c0aa43a06269f8bcd4e04, type: 3}
-    gameObject: {fileID: 0}
-    spawnChance: 13
+    spawnChance: 7
     positionOffsetY: -2
-    offsetReductionXZ: 0
-    useRandomOffsets: 0
-    sphereCastPosition: {x: 0, y: 0, z: 0}
-    facingDirection: {x: 0, y: 0, z: 0}
+    offsetReductionXZ: 0.8
+    useRandomOffsets: 1
+  decorationCastMask:
+    serializedVersion: 2
+    m_Bits: 16
+  decorationSphereCastRadius: 1
+  decorationSphereCastDistance: 5
+  lightCastMask:
+    serializedVersion: 2
+    m_Bits: 16
   lightNumber: 5
+  lightSphereCastRadius: 1
+  lightSphereCastDistance: 5
 --- !u!4 &1894304548
 Transform:
   m_ObjectHideFlags: 0
