@@ -183,6 +183,8 @@ namespace Assets.Scripts
 
         [SerializeField] private float lightSphereCastDistance = 10f;
 
+        public GameObject lightPrefab;
+
         // ------------------------------------------------------------------------------------------- //
 
         private GameObject generatedChunksContainer;
@@ -244,11 +246,13 @@ namespace Assets.Scripts
             ceiling.transform.parent = chunk.transform;
             ceiling.gameObject.isStatic = true;
 
+            AddLightsToCeiling(chunk, bottomLeft);
+
             // Check Chunk ID THEN run AddLightsOnCeiling (exclude that of pitfalls for aura).
             // Make a chance for no lights to spawn based on noise?
             if (chunk.ID != (int)ChunkID.PITFALL)
             {
-                AddLightsToCeiling(chunk, bottomLeft);
+                
                 //StartCoroutine(CheckCeilingLightCollisions());
             }
         }
@@ -404,7 +408,7 @@ namespace Assets.Scripts
             float rotY = offsetZ == 0 ? (randomSide == -1 ? 180 : 0) : (randomSide == -1 ? 270 : 90);
             Vector3 localForward = rotY == 0 ? Directions.RIGHT_v : (rotY == 180 ? Directions.LEFT_v : (rotY == 270 ? Directions.DOWN_v : Directions.UP_v));
 
-            StartCoroutine(SphereCastCollisionCheck(0.1f, sphereCastPosition, decorationSphereCastRadius, localForward, decorationSphereCastDistance, decorationCastMask, () => CreatePrefab(wallPosition + offsets, new Vector3(0, rotY, 0), parent)));
+            StartCoroutine(SphereCastCollisionCheck(0.1f, sphereCastPosition, decorationSphereCastRadius, localForward, decorationSphereCastDistance, decorationCastMask, () => CreatePrefab(lightPrefab, wallPosition + offsets, new Vector3(0, rotY, 0), parent)));
         }
 
         private void GenerateRepetitiveWalls(SquareChunk chunk, Vector2 bottomLeft)
@@ -469,17 +473,22 @@ namespace Assets.Scripts
                     Vector3 position = new Vector3(posX, wallHeight, posZ);
                     Vector3 castPosition = position + new Vector3(0, 5, 0);
 
-                    StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lightCastMask, () => CreatePrefab(position, Vector3.zero, lightContainer.transform)));
+                    StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lightCastMask, () => CreatePrefab(lightPrefab, position, Vector3.zero, lightContainer.transform)));
                 }
             }
         }
 
-        private void CreatePrefab(Vector3 position, Vector3 eulerAngles, Transform parent)
+        private void CreatePrefab(GameObject prefab, Vector3 position, Vector3 eulerAngles, Transform parent)
         {
-            GameObject prefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            prefab.transform.SetPositionAndRotation(position, Quaternion.Euler(eulerAngles));
-            prefab.transform.parent = parent;
-            prefab.isStatic = true;
+            if (prefab == null)
+            {
+                throw new ArgumentException("Prefab isn't assigned in the inspector! [Method: CreatePrefab()]");
+            }
+
+            GameObject instance = Instantiate(prefab);
+            instance.transform.SetPositionAndRotation(position, Quaternion.Euler(eulerAngles));
+            instance.transform.parent = parent;
+            instance.isStatic = true;
         }
 
         private IEnumerator SphereCastCollisionCheck(float delayTime, Vector3 castPosition, float radius, Vector3 castDirection, float maxDistance, LayerMask mask, Action logic)
@@ -508,7 +517,7 @@ namespace Assets.Scripts
                     if (!squareChunks.ContainsKey(coordinates))
                     {
                         Vector2 chunkPosition = coordinates * meshLength;
-                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, chunkPosition); });
+                        SquareChunk chunk = new SquareChunk(chunkPosition, meshLength, 1, carpet, chunk => { GenerateLobbyLevel(chunk, chunkPosition); });
                         chunk.transform.parent = generatedChunksContainer.transform;
                         squareChunks.Add(coordinates, chunk);
                     }
