@@ -123,8 +123,6 @@ namespace Assets.Scripts
 
         [SerializeField] private bool useRandomSeed = false;
 
-        [SerializeField] private bool useTestVisuals = false;
-
         [Space(15f)]
 
         [SerializeField] private int seed; // MULTIPLAYER ONLY NEEDS THIS SENT TO CLIENTS.
@@ -197,11 +195,14 @@ namespace Assets.Scripts
 
         private List<Decoration> decorations;
 
+        private List<GameObject> subChunks;
+
         // ------------------------------------------------------------------------------------------- //
 
         private void Awake()
         {
             squareChunks = new Dictionary<Vector2Int, SquareChunk>();
+            subChunks = new List<GameObject>();
 
             generatedChunksContainer = new GameObject("Generated Chunks");
             prng = new System.Random(seed);
@@ -224,7 +225,7 @@ namespace Assets.Scripts
 
             if (noise < mazeSpawnChance)
             {
-                chunk.ID = (int)ChunkID.MAZE;   
+                chunk.ID = (int)ChunkID.MAZE;
                 GenerateMaze(chunk, bottomLeft);
             }
 
@@ -246,14 +247,9 @@ namespace Assets.Scripts
             ceiling.transform.parent = chunk.transform;
             ceiling.gameObject.isStatic = true;
 
-            AddLightsToCeiling(chunk, bottomLeft);
-
-            // Check Chunk ID THEN run AddLightsOnCeiling (exclude that of pitfalls for aura).
-            // Make a chance for no lights to spawn based on noise?
-            if (chunk.ID != (int)ChunkID.PITFALL)
+            if (chunk.ID != (int)ChunkID.REPETITIVE && chunk.ID != (int)ChunkID.PITFALL)
             {
-                
-                //StartCoroutine(CheckCeilingLightCollisions());
+                AddLightsToCeiling(chunk, bottomLeft);
             }
         }
 
@@ -288,21 +284,10 @@ namespace Assets.Scripts
                         float posX = bottomLeft.x + (x * spacing);
                         float posZ = bottomLeft.y + (y * spacing);
 
-                        Point point = new Point 
-                        { 
-                            nextPosition = new Vector3(posX, wallHeight * 0.5f, posZ) 
-                        };
+                        Point point = new Point { nextPosition = new Vector3(posX, wallHeight * 0.5f, posZ) };
 
                         startPoints.Add(point);
                         chance = 0f;
-
-                        if (useTestVisuals)
-                        {
-                            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                            sphere.transform.position = point.nextPosition;
-                            sphere.transform.parent = chunk.transform;
-                            sphere.isStatic = true;
-                        }
                     }
                 }
             }
@@ -408,7 +393,7 @@ namespace Assets.Scripts
             float rotY = offsetZ == 0 ? (randomSide == -1 ? 180 : 0) : (randomSide == -1 ? 270 : 90);
             Vector3 localForward = rotY == 0 ? Directions.RIGHT_v : (rotY == 180 ? Directions.LEFT_v : (rotY == 270 ? Directions.DOWN_v : Directions.UP_v));
 
-            StartCoroutine(SphereCastCollisionCheck(0.1f, sphereCastPosition, decorationSphereCastRadius, localForward, decorationSphereCastDistance, decorationCastMask, () => CreatePrefab(lightPrefab, wallPosition + offsets, new Vector3(0, rotY, 0), parent)));
+            StartCoroutine(SphereCastCollisionCheck(0.1f, sphereCastPosition, decorationSphereCastRadius, localForward, decorationSphereCastDistance, decorationCastMask, null));
         }
 
         private void GenerateRepetitiveWalls(SquareChunk chunk, Vector2 bottomLeft)
@@ -562,6 +547,8 @@ namespace Assets.Scripts
             {
                 wallOutlet
             };
+
+            subChunks = new List<GameObject>();
 
             prng = new System.Random(seedToUse);
 
