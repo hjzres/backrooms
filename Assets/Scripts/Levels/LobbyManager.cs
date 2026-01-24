@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using static Assets.Scripts.Chunks;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.Levels
 {
     // +x and +z top view perspective.
     // None is the inital value of both Direction variables.
@@ -245,6 +245,7 @@ namespace Assets.Scripts
         {
             List<MeshFilter> wallMeshesToCombineList = new List<MeshFilter>();
             List<MeshFilter> lightMeshesToCombineList = new List<MeshFilter>();
+
             GameObject tempWallContainer = new GameObject("Temporary Wall Container");
             GameObject tempLightContainer = new GameObject("Temporary Light Container");
 
@@ -264,6 +265,8 @@ namespace Assets.Scripts
 
                 RandomizeStartingPoints(chunk, bottomLeft);
                 CreateWalls(tempWallContainer.transform, wallMeshesToCombineList);
+
+                AddLightsToCeiling(chunk, bottomLeft, tempLightContainer.transform, lightMeshesToCombineList);
             }
 
             else if (noise >= mazeSpawnChance && noise < mazeSpawnChance + repetitiveWallsSpawnChance)
@@ -278,13 +281,8 @@ namespace Assets.Scripts
                 GeneratePitfalls(chunk, bottomLeft, tempWallContainer.transform, wallMeshesToCombineList);
             }
 
-            if (chunk.ID != (int)ChunkID.REPETITIVE && chunk.ID != (int)ChunkID.PITFALL)
-            {
-                AddLightsToCeiling(chunk, bottomLeft, tempLightContainer.transform, lightMeshesToCombineList);
-            }
-
-            ReduceMeshCount(chunk, tempWallContainer, wallMeshesToCombineList, "");
-            ReduceMeshCount(chunk, tempLightContainer, lightMeshesToCombineList, "Light");
+            StartCoroutine(ReduceMeshCount(chunk, tempWallContainer, wallMeshesToCombineList, ""));
+            StartCoroutine(ReduceMeshCount(chunk, tempLightContainer, lightMeshesToCombineList, UnityCoreData.lightTag));
         }
 
         private void RandomizeStartingPoints(SquareChunk chunk, Vector2 bottomLeft)
@@ -352,7 +350,7 @@ namespace Assets.Scripts
                     Vector3 position = point.nextPosition + 0.5f * length * direction;
                     Vector3 scale = new Vector3(xAxisScale, wallHeight, zAxisScale);
 
-                    LobbyWall wall = new LobbyWall(position, scale, batchingList, onCreate => AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, position, previousDirection, parent, batchingList));
+                    LobbyWall wall = new LobbyWall(position, scale, batchingList, onCreate => { AddDecorationsOnWall(decorationIndex, scaleInRespectToDirection, position, previousDirection, parent, batchingList); });
                     wall.transform.parent = parent;
                     point.nextPosition += direction * length;
                 }
@@ -414,8 +412,8 @@ namespace Assets.Scripts
             float rotY = offsetZ == 0 ? (sideMultiplier == -1 ? 180 : 0) : (sideMultiplier == -1 ? 270 : 90);
             Vector3 localForward = rotY == 0 ? Directions.RIGHT_v : (rotY == 180 ? Directions.LEFT_v : (rotY == 270 ? Directions.DOWN_v : Directions.UP_v));
 
-            //StartCoroutine(SphereCastCollisionCheck(0.1f, sphereCastPosition, decorationSphereCastRadius, localForward, decorationSphereCastDistance, lobbyWallMask, () => CreatePrefab(null, wallPosition + offsets, new Vector3(0, rotY, 0), parent, batchingList, true)));
-            //StartCoroutine(SphereCastCollisionCheck(0.1f, sphereCastPosition, decorationSphereCastRadius, localForward, decorationSphereCastDistance, lobbyWallMask, null));
+            // TODO: Every type of decoration should have its own batch.
+            //StartCoroutine(SpherecastCollision(0.1f, sphereCastPosition, decorationSphereCastDistance, localForward, decorationSphereCastDistance, lobbyWallMask, () => PrefabToCopiedGameObject(null, wallPosition + offsets, new Vector3(0, rotY, 0), null, UnityCoreData.decorationTag, null)));
         }
 
         private void GenerateRepetitiveWalls(SquareChunk chunk, Vector2 bottomLeft, Transform parent, List<MeshFilter> batchingList)
@@ -477,33 +475,22 @@ namespace Assets.Scripts
                     Vector3 position = new Vector3(posX, wallHeight, posZ);
                     Vector3 castPosition = position + new Vector3(0, 5, 0);
 
-                    GameObject prefab = Instantiate(lightModelPrefab);
-                    prefab.transform.position = position;
-                    prefab.transform.parent = parent;
-                    prefab.tag = "Light";
-
-                    batchingList.Add(prefab.GetComponent<MeshFilter>());
-
-                    //StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lobbyWallMask, () => CreatePrefab(lightPrefab, position, Vector3.zero, parent, batchingList)));
+                    StartCoroutine(SpherecastCollision(.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lobbyWallMask, () => PrefabToCopiedGameObject(lightModelPrefab, position, Vector3.zero, parent, UnityCoreData.lightTag, batchingList)));
                 }
             }
         }
 
-        private void CreatePrefab(GameObject prefab, Vector3 position, Vector3 eulerAngles, Transform parent, List<MeshFilter> batchingList)
+        private void PrefabToCopiedGameObject(GameObject prefab, Vector3 position, Vector3 eulerAngles, Transform parent = null, string tag = "", List<MeshFilter> batchingList = null)
         {
-            /*if (prefab == null)
-            {
-                throw new ArgumentException("Prefab isn't assigned in the inspector! [Method: CreatePrefab()]");
-            }*/
+            GameObject copy = prefab != null ? Instantiate(prefab) : GameObject.CreatePrimitive(PrimitiveType.Cube);
+            copy.transform.SetPositionAndRotation(position, Quaternion.Euler(eulerAngles));
+            copy.transform.parent = parent;
+            copy.tag = tag;
 
-            GameObject instance = prefab == null ? GameObject.CreatePrimitive(PrimitiveType.Cube) : Instantiate(prefab);
-            instance.transform.SetPositionAndRotation(position, Quaternion.Euler(eulerAngles));
-            instance.transform.parent = parent;
-
-            batchingList.Add(instance.GetComponentInChildren<MeshFilter>());
+            batchingList?.Add(copy.GetComponent<MeshFilter>());
         }
 
-        private IEnumerator SphereCastCollisionCheck(float delayTime, Vector3 castPosition, float radius, Vector3 castDirection, float maxDistance, LayerMask mask, Action logic)
+        private IEnumerator SpherecastCollision(float delayTime, Vector3 castPosition, float radius, Vector3 castDirection, float maxDistance, LayerMask mask, Action logic)
         {
             yield return new WaitForSecondsRealtime(delayTime);
 
@@ -517,11 +504,28 @@ namespace Assets.Scripts
         }
 
         // THERE IS A BOTTLENECK SOMEWHERE WHEN GENERATING FURTHER CHUNKS SO FIX THIS SOMETIME.
-        private void ReduceMeshCount(SquareChunk chunk, GameObject tempWallContainer, List<MeshFilter> batchingList, string tag)
+        private IEnumerator ReduceMeshCount(SquareChunk chunk, GameObject tempContainer, List<MeshFilter> batchingList, string tag)
         {
+            yield return new WaitForSecondsRealtime(0.2f);
+
+            if (batchingList.Count == 0 || batchingList == null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(tempContainer);
+                }
+
+                else
+                {
+                    DestroyImmediate(tempContainer);
+                }
+
+                yield break;
+            }
+
             var combineInstance = new CombineInstance[batchingList.Count];
 
-            string name = tag == "Light" ? "Light Meshes On Chunk" : "Wall Meshes On Chunk";
+            string name = tag == UnityCoreData.lightTag ? "Light Meshes On Chunk" : "Wall Meshes On Chunk";
             GameObject combinedMesh = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
 
             for (int i = 0; i < batchingList.Count; i++)
@@ -529,7 +533,7 @@ namespace Assets.Scripts
                 combineInstance[i].mesh = batchingList[i].sharedMesh;
                 combineInstance[i].transform = batchingList[i].transform.localToWorldMatrix;
 
-                if (tag == "Light")
+                if (tag == UnityCoreData.lightTag)
                 {
                     GameObject light = Instantiate(pointLightPrefab);
                     light.transform.position = new Vector3(batchingList[i].transform.position.x, batchingList[i].transform.position.y - .5f, batchingList[i].transform.position.z);
@@ -540,23 +544,23 @@ namespace Assets.Scripts
             Mesh mesh = new Mesh();
             mesh.CombineMeshes(combineInstance);
 
-            Material material = tag == "Light" ? defaultMaterial : arrowWallpaper;
+            Material material = tag == UnityCoreData.lightTag || tag == UnityCoreData.decorationTag ? defaultMaterial : arrowWallpaper;
 
             combinedMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
             combinedMesh.GetComponent<MeshRenderer>().material = material;
             combinedMesh.AddComponent<MeshCollider>();
             combinedMesh.transform.parent = chunk.transform;
-            combinedMesh.layer = 4;
+            combinedMesh.layer = tag == UnityCoreData.lightTag ? 0 : 4;
             combinedMesh.isStatic = true;
 
             if (Application.isPlaying) 
             { 
-                Destroy(tempWallContainer); 
+                Destroy(tempContainer); 
             }
 
             else 
             { 
-                DestroyImmediate(tempWallContainer); 
+                DestroyImmediate(tempContainer); 
             }
 
             batchingList.Clear();

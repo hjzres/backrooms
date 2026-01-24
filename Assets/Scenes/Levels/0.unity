@@ -364,7 +364,8 @@ MonoBehaviour:
   arrowWallpaper: {fileID: 2100000, guid: cc2c8511faccf034f9e61816861711d1, type: 2}
   carpet: {fileID: 2100000, guid: 439f8de0ca74283448ef03160d6cf759, type: 2}
   lightNumber: 8
-  lightPrefab: {fileID: 1356414533205931129, guid: f5aa25b8baaa3c0408ed495226854169, type: 3}
+  lightModelPrefab: {fileID: 683838189358465379, guid: ac636463aa98c6c46b43c3064dd1b49d, type: 3}
+  pointLightPrefab: {fileID: 3246763544337612759, guid: 7d572dc62c8bc744ab82d826b3ec780a, type: 3}
   wallOutlet:
     prefab: {fileID: 5741710243832223666, guid: 41439bccbd9c0aa43a06269f8bcd4e04, type: 3}
     spawnChance: 7
