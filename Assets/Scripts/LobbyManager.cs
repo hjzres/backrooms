@@ -1,8 +1,11 @@
+using NaughtyAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using NaughtyAttributes;
+using Unity.Burst;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Jobs;
 using static Assets.Scripts.Chunks;
 
 namespace Assets.Scripts
@@ -97,6 +100,39 @@ namespace Assets.Scripts
             public bool useRandomOffsets;
         }
 
+        public TransformAccessArray _accessArray;
+
+        [BurstCompile]
+        private struct UpdateClientChunksJob : IJobParallelForTransform
+        {
+            public int _viewDistanceInChunks;
+
+            public float3 _playerPosition;
+
+            public int _meshLength;
+
+            public void Execute(int index, TransformAccess transform)
+            {
+                float2 clientChunkCoord = ComputeClientChunkCoords();
+
+                for (int x = -_viewDistanceInChunks; x <= _viewDistanceInChunks; x++)
+                {
+                    for (int y = -_viewDistanceInChunks; y <= _viewDistanceInChunks; y++)
+                    {
+                        float2 coordinates = new float2(clientChunkCoord.x + x, clientChunkCoord.y + y);
+                    }
+                }
+            }
+
+            private float2 ComputeClientChunkCoords()
+            {
+                int operationX = Mathf.RoundToInt(_playerPosition.x / _meshLength);
+                int operationY = Mathf.RoundToInt(_playerPosition.z / _meshLength);
+
+                return new float2(operationX, operationY);
+            }
+        }
+
         // ------------------------------------------------------------------------------------------- //
 
         [SerializeField] private Transform player;
@@ -159,7 +195,9 @@ namespace Assets.Scripts
 
         [SerializeField] private int lightNumber;
 
-        [SerializeField] private GameObject lightPrefab;
+        [SerializeField] private GameObject lightModelPrefab;
+
+        [SerializeField] private GameObject pointLightPrefab;
 
         [SerializeField] private Decoration wallOutlet; // 13, -2, 0.
 
@@ -176,6 +214,8 @@ namespace Assets.Scripts
         private GameObject generatedChunksContainer;
 
         private static Dictionary<Vector2Int, SquareChunk> squareChunks;
+
+        //private static NativeHashMap<float2, SquareChunk> squareChunksNEW;
 
         private System.Random prng; // MUST BE CREATED ONCE.
 
@@ -203,8 +243,10 @@ namespace Assets.Scripts
 
         private void GenerateLobbyLevel(SquareChunk chunk, Vector2 coordinates)
         {
-            List<MeshFilter> meshToCombineList = new List<MeshFilter>();
+            List<MeshFilter> wallMeshesToCombineList = new List<MeshFilter>();
+            List<MeshFilter> lightMeshesToCombineList = new List<MeshFilter>();
             GameObject tempWallContainer = new GameObject("Temporary Wall Container");
+            GameObject tempLightContainer = new GameObject("Temporary Light Container");
 
             float noise = Noise.WhiteNoise2D(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100;
             Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
@@ -221,27 +263,28 @@ namespace Assets.Scripts
                 startPoints.Clear();
 
                 RandomizeStartingPoints(chunk, bottomLeft);
-                CreateWalls(tempWallContainer.transform, meshToCombineList);
+                CreateWalls(tempWallContainer.transform, wallMeshesToCombineList);
             }
 
             else if (noise >= mazeSpawnChance && noise < mazeSpawnChance + repetitiveWallsSpawnChance)
             {
                 chunk.ID = (int)ChunkID.REPETITIVE;
-                GenerateRepetitiveWalls(chunk, bottomLeft, tempWallContainer.transform, meshToCombineList);
+                GenerateRepetitiveWalls(chunk, bottomLeft, tempWallContainer.transform, wallMeshesToCombineList);
             }
 
             else if (noise >= repetitiveWallsSpawnChance && noise <= mazeSpawnChance + repetitiveWallsSpawnChance + pitfallsSpawnChance)
             {
                 chunk.ID = (int)ChunkID.PITFALL;
-                GeneratePitfalls(chunk, bottomLeft, tempWallContainer.transform, meshToCombineList);
+                GeneratePitfalls(chunk, bottomLeft, tempWallContainer.transform, wallMeshesToCombineList);
             }
-
-            ReduceMeshCount(chunk, tempWallContainer, meshToCombineList);
 
             if (chunk.ID != (int)ChunkID.REPETITIVE && chunk.ID != (int)ChunkID.PITFALL)
             {
-                AddLightsToCeiling(chunk, bottomLeft);
+                AddLightsToCeiling(chunk, bottomLeft, tempLightContainer.transform, lightMeshesToCombineList);
             }
+
+            ReduceMeshCount(chunk, tempWallContainer, wallMeshesToCombineList, "");
+            ReduceMeshCount(chunk, tempLightContainer, lightMeshesToCombineList, "Light");
         }
 
         private void RandomizeStartingPoints(SquareChunk chunk, Vector2 bottomLeft)
@@ -420,12 +463,9 @@ namespace Assets.Scripts
             }
         }
 
-        private void AddLightsToCeiling(SquareChunk chunk, Vector2 bottomLeft)
+        private void AddLightsToCeiling(SquareChunk chunk, Vector2 bottomLeft, Transform parent, List<MeshFilter> batchingList)
         {
             float spacing = (float)chunk.length / lightNumber;
-
-            GameObject lightContainer = new GameObject("Lights");
-            lightContainer.transform.parent = chunk.transform;
 
             for (int x = 0; x < lightNumber; x++)
             {
@@ -437,26 +477,30 @@ namespace Assets.Scripts
                     Vector3 position = new Vector3(posX, wallHeight, posZ);
                     Vector3 castPosition = position + new Vector3(0, 5, 0);
 
-                    StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lobbyWallMask, () => CreatePrefab(lightPrefab, position, Vector3.zero, lightContainer.transform, null)));
+                    GameObject prefab = Instantiate(lightModelPrefab);
+                    prefab.transform.position = position;
+                    prefab.transform.parent = parent;
+                    prefab.tag = "Light";
+
+                    batchingList.Add(prefab.GetComponent<MeshFilter>());
+
+                    //StartCoroutine(SphereCastCollisionCheck(0.1f, castPosition, lightSphereCastRadius, Vector3.down.normalized, lightSphereCastDistance, lobbyWallMask, () => CreatePrefab(lightPrefab, position, Vector3.zero, parent, batchingList)));
                 }
             }
         }
 
-        private void CreatePrefab(GameObject prefab, Vector3 position, Vector3 eulerAngles, Transform parent, List<MeshFilter> batchingList, bool useBatching = false)
+        private void CreatePrefab(GameObject prefab, Vector3 position, Vector3 eulerAngles, Transform parent, List<MeshFilter> batchingList)
         {
             /*if (prefab == null)
             {
                 throw new ArgumentException("Prefab isn't assigned in the inspector! [Method: CreatePrefab()]");
             }*/
 
-            GameObject instance = useBatching ? GameObject.CreatePrimitive(PrimitiveType.Cube) : Instantiate(prefab);
+            GameObject instance = prefab == null ? GameObject.CreatePrimitive(PrimitiveType.Cube) : Instantiate(prefab);
             instance.transform.SetPositionAndRotation(position, Quaternion.Euler(eulerAngles));
             instance.transform.parent = parent;
 
-            if (useBatching)
-            {
-                batchingList.Add(instance.GetComponent<MeshFilter>());
-            }
+            batchingList.Add(instance.GetComponentInChildren<MeshFilter>());
         }
 
         private IEnumerator SphereCastCollisionCheck(float delayTime, Vector3 castPosition, float radius, Vector3 castDirection, float maxDistance, LayerMask mask, Action logic)
@@ -473,23 +517,33 @@ namespace Assets.Scripts
         }
 
         // THERE IS A BOTTLENECK SOMEWHERE WHEN GENERATING FURTHER CHUNKS SO FIX THIS SOMETIME.
-        private void ReduceMeshCount(SquareChunk chunk, GameObject tempWallContainer, List<MeshFilter> batchingList)
+        private void ReduceMeshCount(SquareChunk chunk, GameObject tempWallContainer, List<MeshFilter> batchingList, string tag)
         {
             var combineInstance = new CombineInstance[batchingList.Count];
+
+            string name = tag == "Light" ? "Light Meshes On Chunk" : "Wall Meshes On Chunk";
+            GameObject combinedMesh = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
 
             for (int i = 0; i < batchingList.Count; i++)
             {
                 combineInstance[i].mesh = batchingList[i].sharedMesh;
                 combineInstance[i].transform = batchingList[i].transform.localToWorldMatrix;
-            }
 
-            GameObject combinedMesh = new GameObject("Meshes On Chunk", typeof(MeshFilter), typeof(MeshRenderer));
+                if (tag == "Light")
+                {
+                    GameObject light = Instantiate(pointLightPrefab);
+                    light.transform.position = new Vector3(batchingList[i].transform.position.x, batchingList[i].transform.position.y - .5f, batchingList[i].transform.position.z);
+                    light.transform.parent = combinedMesh.transform;
+                }
+            }
 
             Mesh mesh = new Mesh();
             mesh.CombineMeshes(combineInstance);
 
+            Material material = tag == "Light" ? defaultMaterial : arrowWallpaper;
+
             combinedMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
-            combinedMesh.GetComponent<MeshRenderer>().material = arrowWallpaper;
+            combinedMesh.GetComponent<MeshRenderer>().material = material;
             combinedMesh.AddComponent<MeshCollider>();
             combinedMesh.transform.parent = chunk.transform;
             combinedMesh.layer = 4;
@@ -539,6 +593,16 @@ namespace Assets.Scripts
             }
         }
 
+        private void UpdateClientChunks1()
+        {
+            UpdateClientChunksJob job = new UpdateClientChunksJob()
+            {
+                _viewDistanceInChunks = viewDistanceInChunks,
+                _meshLength = meshLength,
+                _playerPosition = player.position
+            };
+        }
+
         private Vector2Int ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
         {
             int operationX = Mathf.RoundToInt(clientPosition.x / chunkLength);
@@ -562,14 +626,10 @@ namespace Assets.Scripts
         public void GenerateTestChunk()
         {
             int seedToUse = useRandomSeed ? UnityEngine.Random.Range(0, 10000000) : seed;
-            decorations = new List<Decoration>()
-            {
-                wallOutlet
-            };
+            decorations = new List<Decoration>() { wallOutlet };
+            startPoints = new List<Point>();
 
             prng = new System.Random(seedToUse);
-
-            startPoints = new List<Point>();
 
             SquareChunk chunk = new SquareChunk(Vector2.zero, meshLength, 1, defaultMaterial, chunk => { GenerateLobbyLevel(chunk, Vector2.zero); });
             chunk.gameObject.GetComponent<MeshRenderer>().material = carpet;
