@@ -344,12 +344,15 @@ MonoBehaviour:
   mazeSpawnChance: 90
   repetitiveWallsSpawnChance: 5
   pitfallsSpawnChance: 5
+  lobbyWallMask:
+    serializedVersion: 2
+    m_Bits: 16
   useRandomSeed: 0
   seed: 2
   segments: 18
   chanceThreshold: 4
   wallHeight: 7
-  pointChance: {x: 0.1, y: 1}
+  pointSpawnChance: {x: 0.1, y: 1}
   wallChainRange: {x: 3, y: 7}
   wallLengthRange: {x: 3, y: 8}
   repetitiveWallSegments: 14
@@ -360,24 +363,14 @@ MonoBehaviour:
   defaultMaterial: {fileID: 2100000, guid: c028f654dafceaa46a5028f6c2b002d2, type: 2}
   arrowWallpaper: {fileID: 2100000, guid: cc2c8511faccf034f9e61816861711d1, type: 2}
   carpet: {fileID: 2100000, guid: 439f8de0ca74283448ef03160d6cf759, type: 2}
+  lightNumber: 8
+  lightPrefab: {fileID: 1356414533205931129, guid: f5aa25b8baaa3c0408ed495226854169, type: 3}
   wallOutlet:
     prefab: {fileID: 5741710243832223666, guid: 41439bccbd9c0aa43a06269f8bcd4e04, type: 3}
     spawnChance: 7
     positionOffsetY: -2
     offsetReductionXZ: 0.8
     useRandomOffsets: 1
-  decorationCastMask:
-    serializedVersion: 2
-    m_Bits: 16
-  decorationSphereCastRadius: 1
-  decorationSphereCastDistance: 5
-  lightCastMask:
-    serializedVersion: 2
-    m_Bits: 16
-  lightNumber: 8
-  lightSphereCastRadius: 1
-  lightSphereCastDistance: 5
-  lightPrefab: {fileID: 1356414533205931129, guid: f5aa25b8baaa3c0408ed495226854169, type: 3}
 --- !u!4 &1894304548
 Transform:
   m_ObjectHideFlags: 0
