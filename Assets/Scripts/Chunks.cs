@@ -66,6 +66,7 @@ namespace Assets.Scripts
 
                 gameObject.GetComponent<MeshFilter>().mesh = mesh;
                 gameObject.GetComponent<MeshRenderer>().material = material;
+                gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
                 gameObject.isStatic = true;
 
                 this.onCreate = onCreate;

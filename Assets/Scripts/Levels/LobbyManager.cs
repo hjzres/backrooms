@@ -2,10 +2,7 @@ using NaughtyAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Burst;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Jobs;
 using static Assets.Scripts.Chunks;
 
 namespace Assets.Scripts.Levels
@@ -100,39 +97,6 @@ namespace Assets.Scripts.Levels
             public bool useRandomOffsets;
         }
 
-        public TransformAccessArray _accessArray;
-
-        [BurstCompile]
-        private struct UpdateClientChunksJob : IJobParallelForTransform
-        {
-            public int _viewDistanceInChunks;
-
-            public float3 _playerPosition;
-
-            public int _meshLength;
-
-            public void Execute(int index, TransformAccess transform)
-            {
-                float2 clientChunkCoord = ComputeClientChunkCoords();
-
-                for (int x = -_viewDistanceInChunks; x <= _viewDistanceInChunks; x++)
-                {
-                    for (int y = -_viewDistanceInChunks; y <= _viewDistanceInChunks; y++)
-                    {
-                        float2 coordinates = new float2(clientChunkCoord.x + x, clientChunkCoord.y + y);
-                    }
-                }
-            }
-
-            private float2 ComputeClientChunkCoords()
-            {
-                int operationX = Mathf.RoundToInt(_playerPosition.x / _meshLength);
-                int operationY = Mathf.RoundToInt(_playerPosition.z / _meshLength);
-
-                return new float2(operationX, operationY);
-            }
-        }
-
         // ------------------------------------------------------------------------------------------- //
 
         [SerializeField] private Transform player;
@@ -219,8 +183,6 @@ namespace Assets.Scripts.Levels
 
         private System.Random prng; // MUST BE CREATED ONCE.
 
-        private List<Point> startPoints;
-
         private List<Decoration> decorations;
 
         // ------------------------------------------------------------------------------------------- //
@@ -228,7 +190,6 @@ namespace Assets.Scripts.Levels
         private void Awake()
         {
             squareChunks = new Dictionary<Vector2Int, SquareChunk>();
-            startPoints = new List<Point>();
 
             generatedChunksContainer = new GameObject("Generated Chunks");
             prng = new System.Random(seed);
@@ -252,21 +213,14 @@ namespace Assets.Scripts.Levels
             float noise = Noise.WhiteNoise2D(new Vector2(coordinates.x + seed, coordinates.y + seed)) * 100;
             Vector2 bottomLeft = new Vector2(chunk.position.x - chunk.length * 0.5f, chunk.position.y - chunk.length * 0.5f);
 
-            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, null);
-            ceiling.gameObject.name = "Ceiling";
-            ceiling.transform.SetPositionAndRotation(new Vector3(ceiling.transform.position.x, wallHeight, ceiling.transform.position.z + meshLength), Quaternion.Euler(new Vector3(180, 0, 0)));
-            ceiling.transform.parent = chunk.transform;
-            ceiling.gameObject.isStatic = true;
-
             if (noise < mazeSpawnChance)
             {
                 chunk.ID = (int)ChunkID.MAZE;
-                startPoints.Clear();
 
-                RandomizeStartingPoints(chunk, bottomLeft);
-                CreateWalls(tempWallContainer.transform, wallMeshesToCombineList);
+                List<Point> startPoints = new List<Point>();
 
-                AddLightsToCeiling(chunk, bottomLeft, tempLightContainer.transform, lightMeshesToCombineList);
+                RandomizeStartingPoints(chunk, bottomLeft, startPoints);
+                CreateWalls(tempWallContainer.transform, startPoints, wallMeshesToCombineList);
             }
 
             else if (noise >= mazeSpawnChance && noise < mazeSpawnChance + repetitiveWallsSpawnChance)
@@ -281,11 +235,19 @@ namespace Assets.Scripts.Levels
                 GeneratePitfalls(chunk, bottomLeft, tempWallContainer.transform, wallMeshesToCombineList);
             }
 
+            SquareChunk ceiling = new SquareChunk(coordinates, meshLength, 1, defaultMaterial, null);
+            ceiling.gameObject.name = "Ceiling";
+            ceiling.transform.SetPositionAndRotation(new Vector3(ceiling.transform.position.x, wallHeight, ceiling.transform.position.z + meshLength), Quaternion.Euler(new Vector3(180, 0, 0)));
+            ceiling.transform.parent = chunk.transform;
+            ceiling.gameObject.isStatic = true;
+
+            AddLightsToCeiling(chunk, bottomLeft, tempLightContainer.transform, lightMeshesToCombineList);
+
             StartCoroutine(ReduceMeshCount(chunk, tempWallContainer, wallMeshesToCombineList, ""));
             StartCoroutine(ReduceMeshCount(chunk, tempLightContainer, lightMeshesToCombineList, UnityCoreData.lightTag));
         }
 
-        private void RandomizeStartingPoints(SquareChunk chunk, Vector2 bottomLeft)
+        private void RandomizeStartingPoints(SquareChunk chunk, Vector2 bottomLeft, List<Point> startPoints)
         {
             float spacing = (float)chunk.length / segments;
             float chance = 0f;
@@ -316,7 +278,7 @@ namespace Assets.Scripts.Levels
             }
         }
 
-        private void CreateWalls(Transform parent, List<MeshFilter> batchingList)
+        private void CreateWalls(Transform parent, List<Point> startPoints, List<MeshFilter> batchingList)
         {
             if (startPoints.Count <= 0)
             {
@@ -463,11 +425,17 @@ namespace Assets.Scripts.Levels
 
         private void AddLightsToCeiling(SquareChunk chunk, Vector2 bottomLeft, Transform parent, List<MeshFilter> batchingList)
         {
-            float spacing = (float)chunk.length / lightNumber;
-
-            for (int x = 0; x < lightNumber; x++)
+            if (chunk.ID == (int)ChunkID.REPETITIVE)
             {
-                for (int y = 0; y < lightNumber; y++)
+                return;
+            }
+
+            int num = chunk.ID == (int)ChunkID.PITFALL ? Mathf.RoundToInt(lightNumber * 0.5f) : lightNumber;
+            float spacing = (float)chunk.length / num;
+
+            for (int x = 0; x < num; x++)
+            {
+                for (int y = 0; y < num; y++)
                 {
                     float posX = bottomLeft.x + x * spacing;
                     float posZ = bottomLeft.y + y * spacing;
@@ -544,7 +512,7 @@ namespace Assets.Scripts.Levels
             Mesh mesh = new Mesh();
             mesh.CombineMeshes(combineInstance);
 
-            Material material = tag == UnityCoreData.lightTag || tag == UnityCoreData.decorationTag ? defaultMaterial : arrowWallpaper;
+            Material material = tag == UnityCoreData.lightTag || tag == UnityCoreData.decorationTag ? defaultMaterial : (chunk.ID == (int)ChunkID.PITFALL ? carpet : arrowWallpaper);
 
             combinedMesh.GetComponent<MeshFilter>().sharedMesh = mesh;
             combinedMesh.GetComponent<MeshRenderer>().material = material;
@@ -590,21 +558,11 @@ namespace Assets.Scripts.Levels
             // Will definitely come back and rewrite this, as a foreach loop is kind of unoptimal
             // when I feel that it could be done in the nested loops instead.
             foreach (var chunk in squareChunks) 
-            { 
-                Vector2Int delta = chunk.Key - clientChunkCoord; 
-                bool isWithinRange = Mathf.Abs(delta.x) <= viewDistanceInChunks && Mathf.Abs(delta.y) <= viewDistanceInChunks; 
-                chunk.Value.gameObject.SetActive(isWithinRange); 
-            }
-        }
-
-        private void UpdateClientChunks1()
-        {
-            UpdateClientChunksJob job = new UpdateClientChunksJob()
             {
-                _viewDistanceInChunks = viewDistanceInChunks,
-                _meshLength = meshLength,
-                _playerPosition = player.position
-            };
+                Vector2Int delta = chunk.Key - clientChunkCoord;
+                bool isWithinRange = Mathf.Abs(delta.x) <= viewDistanceInChunks && Mathf.Abs(delta.y) <= viewDistanceInChunks;
+                chunk.Value.gameObject.SetActive(isWithinRange);
+            }
         }
 
         private Vector2Int ComputeCliendChunkCoords(Vector3 clientPosition, int chunkLength)
@@ -631,7 +589,6 @@ namespace Assets.Scripts.Levels
         {
             int seedToUse = useRandomSeed ? UnityEngine.Random.Range(0, 10000000) : seed;
             decorations = new List<Decoration>() { wallOutlet };
-            startPoints = new List<Point>();
 
             prng = new System.Random(seedToUse);
 
