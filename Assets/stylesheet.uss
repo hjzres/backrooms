@@ -4,7 +4,7 @@
 .button {
     height: 20%;
     font-size: 200%;
-    width: 30%;
+    width: 40%;
 }
 
 .SettingsText {
