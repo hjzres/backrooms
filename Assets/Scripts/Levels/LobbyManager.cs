@@ -7,20 +7,20 @@ using static Assets.Scripts.Chunks;
 
 namespace Assets.Scripts.Levels
 {
-    // +x and +z top view perspective.
-    // None is the inital value of both Direction variables.
-    public enum NextDirection
+    public class LobbyManager : GameManager
     {
-        NONE, UP, DOWN, LEFT, RIGHT
-    }
+        // +x and +z top view perspective.
+        // None is the inital value of both Direction variables.
+        public enum NextDirection
+        {
+            NONE, UP, DOWN, LEFT, RIGHT
+        }
 
-    public enum ChunkID
-    {
-        MAZE, REPETITIVE, PITFALL
-    }
+        public enum ChunkID
+        {
+            MAZE, REPETITIVE, PITFALL
+        }
 
-    public class LobbyManager : MonoBehaviour
-    {
         private readonly struct Directions
         {
             public static readonly Vector3 UP_v = new Vector3(0, 0, 1);
@@ -123,8 +123,6 @@ namespace Assets.Scripts.Levels
 
         [Space(15f)]
 
-        [SerializeField] private int seed; // MULTIPLAYER ONLY NEEDS THIS SENT TO CLIENTS.
-
         [SerializeField] [Range(1, 20)] private int segments = 18;
 
         [SerializeField] private float chanceThreshold = 4.0f;
@@ -167,7 +165,7 @@ namespace Assets.Scripts.Levels
 
         private readonly float decorationSphereCastRadius = 1.0f;
 
-        private readonly float decorationSphereCastDistance = 5f;
+        // private readonly float decorationSphereCastDistance = 5f;
 
         private readonly float lightSphereCastRadius = 1f;
 
@@ -178,10 +176,6 @@ namespace Assets.Scripts.Levels
         private GameObject generatedChunksContainer;
 
         private static Dictionary<Vector2Int, SquareChunk> squareChunks;
-
-        //private static NativeHashMap<float2, SquareChunk> squareChunksNEW;
-
-        private System.Random prng; // MUST BE CREATED ONCE.
 
         private List<Decoration> decorations;
 
@@ -262,7 +256,7 @@ namespace Assets.Scripts.Levels
                         continue;
                     }
 
-                    chance += NextFloat(pointSpawnChance.x, pointSpawnChance.y);
+                    chance += Utils.NextFloat(pointSpawnChance.x, pointSpawnChance.y, prng);
 
                     if (chance >= chanceThreshold)
                     {
@@ -364,8 +358,8 @@ namespace Assets.Scripts.Levels
             float offsetZ = wallDirection == Directions.LEFT_v || wallDirection == Directions.RIGHT_v ? -0.5f * sideMultiplier : 0;
 
             wallScaleFactor *= 0.4f; // Decrease random offset area.
-            float randOffsetX = offsetX == 0 && deco.useRandomOffsets ? NextFloat(-wallScaleFactor + deco.offsetReductionXZ, wallScaleFactor - deco.offsetReductionXZ) : 0;
-            float randOffsetZ = offsetZ == 0 && deco.useRandomOffsets ? NextFloat(-wallScaleFactor + deco.offsetReductionXZ, wallScaleFactor - deco.offsetReductionXZ) : 0;
+            float randOffsetX = offsetX == 0 && deco.useRandomOffsets ? Utils.NextFloat(-wallScaleFactor + deco.offsetReductionXZ, wallScaleFactor - deco.offsetReductionXZ, prng) : 0;
+            float randOffsetZ = offsetZ == 0 && deco.useRandomOffsets ? Utils.NextFloat(-wallScaleFactor + deco.offsetReductionXZ, wallScaleFactor - deco.offsetReductionXZ, prng) : 0;
 
             Vector3 offsets = new Vector3(offsetX + randOffsetX, deco.positionOffsetY, offsetZ + randOffsetZ);
             Vector3 sphereCastPosition = new Vector3(wallPosition.x + offsets.x * (decorationSphereCastRadius + 1), wallPosition.y + offsets.y, wallPosition.z + offsets.z * (decorationSphereCastRadius + 1));
@@ -571,17 +565,6 @@ namespace Assets.Scripts.Levels
             int operationY = Mathf.RoundToInt(clientPosition.z / chunkLength);
 
             return new Vector2Int(operationX, operationY);
-        }
-
-        private float NextFloat(float min, float max)
-        {
-            if (min > max)
-            {
-                throw new ArgumentException("Variable 'min' must be smaller than variable 'max' [Method: NextFloat()].");
-            }
-
-            double range = max - min;
-            return (float)(min + prng.NextDouble() * range);
         }
 
         [Button]
