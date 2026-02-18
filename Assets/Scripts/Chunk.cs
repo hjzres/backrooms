@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -17,45 +18,67 @@ namespace Assets.Scripts
 
         public int length;
 
-        public float2 position;
+        public Vector2 position;
 
-        public readonly Vector3[] verts;
+        public Vector3[] vertices;
 
-        public readonly Vector3[] normals;
+        private readonly Vector3[] normals;
 
-        public readonly Vector2[] uvs;
+        private readonly Vector2[] uvs;
 
-        public readonly int[] tris;
+        private readonly int[] tris;
 
         private readonly Action<Chunk> onCreate;
 
-        public Chunk(float2 position, int resolution, int length, Material material = null, bool tempAllocator = false, Action<Chunk> onCreate = null)
+        public Chunk(Vector2 position, int resolution, int length, Material material, Transform parent = null, Action<Chunk> onCreate = null)
         {
-            Type[] components = new Type[3] { typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider) };
-
-            gameObject = new GameObject("Chunk", components);
+            gameObject = new GameObject("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             transform = gameObject.transform;
+            transform.position = new Vector3(position.x, 0, position.y);
+            this.position = position;
             this.resolution = resolution;
             this.length = length;
-            this.position = position - length * 0.5f;
             this.onCreate = onCreate;
 
-            int resSquared = (resolution + 1) * (resolution + 1);
-            verts = new Vector3[resSquared];
+            tris = new int[6 * resolution * resolution]; // Derived by the Drei
+            resolution++;
+
+            int resSquared = resolution * resolution;
+            vertices = new Vector3[resSquared];
             normals = new Vector3[resSquared];
             uvs = new Vector2[resSquared];
-            tris = new int[6 * resolution * resolution]; // Derived by the Drei
 
-            transform.position = new Vector3(this.position.x, 0, this.position.y);
+            SendAndReadJobData(resSquared);
 
-            Allocator a = tempAllocator ? Allocator.TempJob : Allocator.Persistent;
+            Mesh mesh = new()
+            {
+                vertices = vertices,
+                normals = normals,
+                uv = uvs,
+                triangles = tris
+            };
 
-            NativeArray<float3> vertsArray = new NativeArray<float3>(resSquared, a);
-            NativeArray<float3> normalsArray = new NativeArray<float3>(resSquared, a);
-            NativeArray<float2> uvsArray = new NativeArray<float2>(resSquared, a);
-            NativeArray<int> trisArray = new NativeArray<int>(6 * resolution * resolution, a);
+            mesh.RecalculateNormals();
 
-            ChunkBuilderJob job = new ChunkBuilderJob()
+            gameObject.GetComponent<MeshFilter>().mesh = mesh;
+            gameObject.GetComponent<MeshRenderer>().material = material;
+            gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
+            gameObject.isStatic = true;
+            transform.SetParent(parent);
+
+            onCreate?.Invoke(this);
+        }
+
+        private void SendAndReadJobData(int arraySize)
+        {
+            Allocator allocator = Application.isPlaying ? Allocator.TempJob : Allocator.Persistent;
+
+            NativeArray<float3> vertsArray = new(arraySize, allocator);
+            NativeArray<float3> normalsArray = new(arraySize, allocator);
+            NativeArray<float2> uvsArray = new(arraySize, allocator);
+            NativeArray<int> trisArray = new(6 * resolution * resolution, allocator);
+
+            ChunkBuilderJob job = new()
             {
                 _vertices = vertsArray,
                 _normals = normalsArray,
@@ -68,9 +91,9 @@ namespace Assets.Scripts
             JobHandle handle = job.Schedule();
             handle.Complete();
 
-            for (int i = 0; i < vertsArray.Length; i++)
+            for (int i = 0; i < arraySize; i++)
             {
-                verts[i] = vertsArray[i];
+                vertices[i] = vertsArray[i];
                 normals[i] = normalsArray[i];
                 uvs[i] = uvsArray[i];
             }
@@ -84,20 +107,18 @@ namespace Assets.Scripts
             normalsArray.Dispose();
             uvsArray.Dispose();
             trisArray.Dispose();
+        }
 
-            Mesh mesh = new Mesh();
-            mesh.vertices = verts;
-            mesh.normals = normals;
-            mesh.uv = uvs;
-            mesh.triangles = tris;
-            mesh.RecalculateNormals();
+        public void Update(Vector2Int playerCoord, Vector2Int chunkCoord, Chunk chunk)
+        {
+            Vector2Int distance = chunkCoord - playerCoord;
+            bool withinRange = Mathf.Abs(distance.x) <= 2 && Mathf.Abs(distance.y) <= 2;
+            chunk.gameObject.SetActive(withinRange);
+        }
 
-            gameObject.GetComponent<MeshFilter>().mesh = mesh;
-            gameObject.GetComponent<MeshRenderer>().material = material;
-            gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
-            gameObject.isStatic = true;
+        public void AddToGenerationQueue()
+        {
 
-            onCreate?.Invoke(this);
         }
     }
 
@@ -124,7 +145,7 @@ namespace Assets.Scripts
             {
                 for (int j = 0; j <= _resolution; j++)
                 {
-                    float2 spacing = new float2(i * spacingBetweenVerts, j * spacingBetweenVerts);
+                    float2 spacing = new(i * spacingBetweenVerts, j * spacingBetweenVerts);
 
                     _vertices[i * (_resolution + 1) + j] = new float3(spacing.x, 0, spacing.y);
                     _normals[i * (_resolution + 1) + j] = new float3(0, 0, -1);
