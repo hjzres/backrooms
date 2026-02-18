@@ -3,7 +3,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -109,17 +108,7 @@ namespace Assets.Scripts
             trisArray.Dispose();
         }
 
-        public void Update(Vector2Int playerCoord, Vector2Int chunkCoord, Chunk chunk)
-        {
-            Vector2Int distance = chunkCoord - playerCoord;
-            bool withinRange = Mathf.Abs(distance.x) <= 2 && Mathf.Abs(distance.y) <= 2;
-            chunk.gameObject.SetActive(withinRange);
-        }
-
-        public void AddToGenerationQueue()
-        {
-
-        }
+        public bool Flag() => false;
     }
 
     [BurstCompile]

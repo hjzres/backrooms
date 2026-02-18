@@ -103,9 +103,9 @@
 
 //        [Header("Chunking Properties")]
 
-//        [SerializeField] [Min(1)] private int meshLength = 1;
+//        [SerializeField][Min(1)] private int meshLength = 1;
 
-//        [SerializeField] [Min(1)] private int viewDistanceInChunks = 1;
+//        [SerializeField][Min(1)] private int viewDistanceInChunks = 1;
 
 //        [Space(15f)]
 
@@ -123,27 +123,27 @@
 
 //        [Space(15f)]
 
-//        [SerializeField] [Range(1, 20)] private int segments = 18;
+//        [SerializeField][Range(1, 20)] private int segments = 18;
 
 //        [SerializeField] private float chanceThreshold = 4.0f;
 
-//        [SerializeField] [Min(1)] private float wallHeight = 7.0f;
+//        [SerializeField][Min(1)] private float wallHeight = 7.0f;
 
 //        [SerializeField] private Vector2 pointSpawnChance = new Vector2(0.1f, 1);
 
 //        [SerializeField] private Vector2Int wallChainRange = new Vector2Int(3, 7);
-        
+
 //        [SerializeField] private Vector2Int wallLengthRange = new Vector2Int(3, 8);
 
-//        [SerializeField] [Min(1)] private int repetitiveWallSegments = 14;
+//        [SerializeField][Min(1)] private int repetitiveWallSegments = 14;
 
 //        [SerializeField] private float repetitiveWallsThickness = 1.5f;
 
-//        [SerializeField] [Min(1)] private int pitfallNumber = 8;
+//        [SerializeField][Min(1)] private int pitfallNumber = 8;
 
-//        [SerializeField] [Min(1)] private float pitfallThickness = 2;
+//        [SerializeField][Min(1)] private float pitfallThickness = 2;
 
-//        [SerializeField] [Min(0)] private int pitfallDepth = 80;
+//        [SerializeField][Min(0)] private int pitfallDepth = 80;
 
 //        [Header("Materials")]
 
@@ -298,7 +298,7 @@
 //                    int zAxisScale = point.nextDirection == NextDirection.UP || point.nextDirection == NextDirection.DOWN ? length + 1 : 1;
 
 //                    // Have a chance to spawn one of the decorations from the list.
-//                    int decorationIndex = prng.Next(0, decorations.Count); 
+//                    int decorationIndex = prng.Next(0, decorations.Count);
 //                    int scaleInRespectToDirection = Mathf.Max(xAxisScale, zAxisScale);
 
 //                    previousDirection = direction;
@@ -345,9 +345,9 @@
 //        {
 //            bool canSpawn = prng.Next(1, wallOutlet.spawnChance) == 1;
 
-//            if (!canSpawn) 
-//            { 
-//                return; 
+//            if (!canSpawn)
+//            {
+//                return;
 //            }
 
 //            Decoration deco = decorations[decorationIndex];
@@ -515,14 +515,14 @@
 //            combinedMesh.layer = tag == UnityCoreData.lightTag ? 0 : 4;
 //            combinedMesh.isStatic = true;
 
-//            if (Application.isPlaying) 
-//            { 
-//                Destroy(tempContainer); 
+//            if (Application.isPlaying)
+//            {
+//                Destroy(tempContainer);
 //            }
 
-//            else 
-//            { 
-//                DestroyImmediate(tempContainer); 
+//            else
+//            {
+//                DestroyImmediate(tempContainer);
 //            }
 
 //            batchingList.Clear();
@@ -551,7 +551,7 @@
 //            // AI assisted, I could not figure out how to disable them for the life of me.
 //            // Will definitely come back and rewrite this, as a foreach loop is kind of unoptimal
 //            // when I feel that it could be done in the nested loops instead.
-//            foreach (var chunk in squareChunks) 
+//            foreach (var chunk in squareChunks)
 //            {
 //                Vector2Int delta = chunk.Key - clientChunkCoord;
 //                bool isWithinRange = Mathf.Abs(delta.x) <= viewDistanceInChunks && Mathf.Abs(delta.y) <= viewDistanceInChunks;
