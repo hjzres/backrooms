@@ -1,17 +1,16 @@
-using UnityEditor.SearchService;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace Lobby
 {
     public class UIManager : MonoBehaviour
     {
-        public VisualElement ui;
+        VisualElement ui;
 
-        public Button startButton;
-        public Button optionsButton;
-        public Button quitButton;
+        Button startButton;
+        Button sessionsButton;
+        Button codeButton;
+        Button backButton;
 
         void Awake()
         {
@@ -21,29 +20,36 @@ namespace Lobby
         void OnEnable()
         {
             startButton = ui.Q<Button>("StartButton");
-            startButton.clicked += onStartButtonClicked;
+            startButton.clicked += OnStartButtonClicked;
 
-            optionsButton = ui.Q<Button>("OptionsButton");
-            optionsButton.clicked += onOptionsButtonClicked;
+            sessionsButton = ui.Q<Button>("SessionsButton");
+            sessionsButton.clicked += OnSessionsButtonClicked;
 
-            quitButton = ui.Q<Button>("QuitButton");
-            quitButton.clicked += onQuitButtonClicked;
+            codeButton = ui.Q<Button>("CodeButton");
+            codeButton.clicked += OnCodeButtonClicked;
+
+            backButton = ui.Q<Button>("BackButton");
+            backButton.clicked += OnBackButtonClicked;
         }
 
-        void onStartButtonClicked()
+        void OnStartButtonClicked()
         {
             Debug.Log("Start");
-            SceneManager.LoadScene(1);
         }
 
-        void onOptionsButtonClicked()
+        void OnSessionsButtonClicked()
         {
-            Debug.Log("Options");
+            Debug.Log("Sessions");
         }
 
-        void onQuitButtonClicked()
+        void OnCodeButtonClicked()
         {
-            Debug.Log("Quit");
+            Debug.Log("Code");
+        }
+        
+        void OnBackButtonClicked()
+        {
+            Debug.Log("Back");
         }
     }
 }
