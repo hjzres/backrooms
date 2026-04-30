@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace Lobby
@@ -39,17 +40,17 @@ namespace Lobby
 
         void OnSessionsButtonClicked()
         {
-            Debug.Log("Sessions");
+            SceneManager.LoadScene(3);
         }
 
         void OnCodeButtonClicked()
         {
-            Debug.Log("Code");
+            SceneManager.LoadScene(2);
         }
         
         void OnBackButtonClicked()
         {
-            Debug.Log("Back");
+            SceneManager.LoadScene(0);
         }
     }
 }
