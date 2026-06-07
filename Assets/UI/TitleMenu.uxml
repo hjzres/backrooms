@@ -4,7 +4,7 @@
         <ui:VisualElement name="Container" style="flex-grow: 1; align-self: center; align-items: stretch; justify-content: space-between; flex-direction: column; width: 40%;">
             <ui:Label text="Backrooms" name="Title" style="font-size: 50%; -unity-text-align: upper-center;" />
             <ui:VisualElement name="Buttons" style="flex-grow: 1; background-size: 100% 30%; justify-content: space-evenly; position: relative; top: 5%; height: 20%; flex-direction: column; align-items: center;">
-                <ui:Button text="Start" name="StartButton" class="button" style="bottom: 5%; text-overflow: clip;" />
+                <ui:Button text="Play" name="PlayButton" class="button" style="bottom: 5%; text-overflow: clip;" />
                 <ui:Button text="Options" name="OptionsButton" class="button" style="bottom: 5%;" />
                 <ui:Button text="Quit" name="QuitButton" class="button" style="bottom: 5%;" />
             </ui:VisualElement>

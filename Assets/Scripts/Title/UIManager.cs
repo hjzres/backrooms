@@ -9,7 +9,7 @@ namespace Title
     {
         public VisualElement ui;
 
-        public Button startButton;
+        public Button playButton;
         public Button optionsButton;
         public Button quitButton;
 
@@ -20,8 +20,8 @@ namespace Title
 
         void OnEnable()
         {
-            startButton = ui.Q<Button>("StartButton");
-            startButton.clicked += onStartButtonClicked;
+            playButton = ui.Q<Button>("PlayButton");
+            playButton.clicked += onStartButtonClicked;
 
             optionsButton = ui.Q<Button>("OptionsButton");
             optionsButton.clicked += onOptionsButtonClicked;
