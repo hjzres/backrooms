@@ -21,7 +21,7 @@ namespace Assets.Scripts.Levels
             NONE
         }
         
-        private static readonly float3[] normalizedDirections = { new(0, 0, 1), new(1, 0, 0), new(0, 0, -1), new(-1, 0, 0) };
+        private static readonly float3[] normalizedDirections = { new(0, 0, 1), new(1, 0, 0), new(0, 0, -1), new(-1, 0, 0), new(0, 0, 0) };
 
         [Min(1)]
         [SerializeField] private uint seed;
@@ -56,27 +56,40 @@ namespace Assets.Scripts.Levels
         {
             public float3 position;
 
-            public Direction[] directions;
+            public readonly Direction[] directions;
 
             public Direction nextDir;
 
-            public Point(float3 position, int maxDirections)
+            public Point(float3 position, int maxDirections, ref Unity.Mathematics.Random prng)
             {
                 this.position = position;
-                directions = new Direction[maxDirections];
+                directions = new Direction[maxDirections + 1];
                 nextDir = Direction.NONE;
+                
+                Direction lastDir = Direction.NONE;
+
+                for (int i = 0; i < maxDirections; i++)
+                {
+                    if (i == maxDirections)
+                    {
+                        directions[i] = Direction.NONE;
+                    }
+
+                    directions[i] = RandomizeDirection(lastDir, ref prng);
+                    lastDir = directions[i]; 
+                }
             }
 
-            public static Direction RandomizeDirection(Direction previousDirection, ref Unity.Mathematics.Random prng)
+            public static Direction RandomizeDirection(Direction lastDirection, ref Unity.Mathematics.Random prng)
             {
                 int num = prng.NextInt(0, 4);
 
                 return num switch
                 {
-                    0 => previousDirection == Direction.DOWN ? Direction.DOWN : Direction.UP,
-                    1 => previousDirection == Direction.LEFT ? Direction.LEFT : Direction.RIGHT,
-                    2 => previousDirection == Direction.UP ? Direction.UP : Direction.DOWN,
-                    3 => previousDirection == Direction.RIGHT ? Direction.RIGHT : Direction.LEFT,
+                    0 => lastDirection == Direction.DOWN ? Direction.DOWN : Direction.UP,
+                    1 => lastDirection == Direction.LEFT ? Direction.LEFT : Direction.RIGHT,
+                    2 => lastDirection == Direction.UP ? Direction.UP : Direction.DOWN,
+                    3 => lastDirection == Direction.RIGHT ? Direction.RIGHT : Direction.LEFT,
                     _ => throw new ArgumentException("An error occured choosing a random direction for the next wall."),
                 };
             }
@@ -90,31 +103,48 @@ namespace Assets.Scripts.Levels
 
             int maxWalls = prng.NextInt(3, 8);
 
-            Point point = new(float3.zero, maxWalls);
-
-            Direction previousDir = Direction.NONE;
+            Point point = new(float3.zero, maxWalls, ref prng);
 
             List<Vector3> vertices = new();
-            PlaceEndVertices(testDirection, point, ref vertices);
+            PlaceEndVertices(point.directions[0], point, ref vertices);
 
             List<int> triangles = new()
             {
                 0, 1, 3, 1, 2, 3
             };
 
+            int verts = 4;
+
             for (int i = 0; i < maxWalls; i++) // UP, LEFT, UP, LEFT
             {
-                //int distance = 5;
+                int distance = 5;
 
-                //point.nextDir = Point.RandomizeDirection(previousDir, ref prng);
-                //point.position += normalizedDirections[(int)point.nextDir] * distance;
-                //previousDir = point.nextDir;
+                point.position += normalizedDirections[(int)point.directions[i]] * distance;
 
-                point.directions[i] = Point.RandomizeDirection(previousDir, ref prng);
-                previousDir = point.directions[i];
+                if (point.directions[i + 1] != Direction.NONE)
+                {
+                    float dotProduct = DotProduct(normalizedDirections[(int)point.directions[i]], normalizedDirections[(int)point.directions[i + 1]]);
+
+                    vertices.Add(new Vector3(point.position.x - 1, 0, point.position.z - 1));
+                    vertices.Add(new Vector3(point.position.x - 1, 5, point.position.z - 1));   
+                    vertices.Add(new Vector3(point.position.x + 1, 5, point.position.z + 1));
+                    vertices.Add(new Vector3(point.position.x + 1, 0, point.position.z + 1));
+
+                    triangles.AddRange(new List<int>
+                    {
+                        verts, verts + 1, verts - 4,
+                        verts + 1, verts - 3, verts - 4,
+                        verts - 1, verts - 2, verts + 2,
+                        verts - 1, verts + 2, verts + 3
+                    });
+
+                    verts += 4;
+                }
+
+                // PLACEHOLDER VISUAL
+                GameObject c = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                c.transform.position = new(point.position.x, 5, point.position.z);
             }
-
-            BuildSegments(point, ref prng);
 
             Mesh mesh = new()
             {
@@ -124,10 +154,12 @@ namespace Assets.Scripts.Levels
 
             mesh.RecalculateNormals();
 
-            GameObject obj = new GameObject("Mesh", typeof(MeshFilter), typeof(MeshRenderer));
+            GameObject obj = new("Mesh", typeof(MeshFilter), typeof(MeshRenderer));
             obj.GetComponent<MeshFilter>().mesh = mesh;
             obj.GetComponent<MeshRenderer>().material = gray;
         }
+
+        private static float DotProduct(float3 a, float3 b) => (a.x * b.x) + (a.y * b.y) + (a.z * b.z); 
 
         private void PlaceEndVertices(Direction direction, Point point, ref List<Vector3> vertices)
         {
@@ -150,14 +182,6 @@ namespace Assets.Scripts.Levels
                 new Vector3(offsets[2].Item1, 5, offsets[2].Item2),
                 new Vector3(offsets[3].Item1, 0, offsets[3].Item2),
             };
-        }
-
-        private void BuildSegments(Point point, ref Unity.Mathematics.Random prng)
-        {
-            for (int i = 0; i < point.directions.Length; i++)
-            {
-
-            }
         }
 
         private struct SegmentBuilder : IJob
