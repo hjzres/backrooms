@@ -21,7 +21,7 @@ namespace Assets.Scripts.Levels
             NONE
         }
         
-        private static readonly float3[] normalizedDirections = { new(0, 0, 1), new(1, 0, 0), new(0, 0, -1), new(-1, 0, 0), new(0, 0, 0) };
+        private static readonly float3[] normalizedDirections = { new(0, 0, 1), new(1, 0, 0), new(0, 0, -1), new(-1, 0, 0) };
 
         [Min(1)]
         [SerializeField] private uint seed;
@@ -47,16 +47,12 @@ namespace Assets.Scripts.Levels
         [SerializeField] private float gizmoRadius;
 
         [SerializeField] private Color gizmoColor;
-
-
-
-        [SerializeField] private Direction testDirection;
         
         public struct Point
         {
             public float3 position;
 
-            public readonly Direction[] directions;
+            public Direction[] directions;
 
             public Direction nextDir;
 
@@ -65,7 +61,7 @@ namespace Assets.Scripts.Levels
                 this.position = position;
                 directions = new Direction[maxDirections + 1];
                 nextDir = Direction.NONE;
-                
+
                 Direction lastDir = Direction.NONE;
 
                 for (int i = 0; i < maxDirections; i++)
@@ -76,7 +72,7 @@ namespace Assets.Scripts.Levels
                     }
 
                     directions[i] = RandomizeDirection(lastDir, ref prng);
-                    lastDir = directions[i]; 
+                    lastDir = directions[i];
                 }
             }
 
@@ -90,6 +86,7 @@ namespace Assets.Scripts.Levels
                     1 => lastDirection == Direction.LEFT ? Direction.LEFT : Direction.RIGHT,
                     2 => lastDirection == Direction.UP ? Direction.UP : Direction.DOWN,
                     3 => lastDirection == Direction.RIGHT ? Direction.RIGHT : Direction.LEFT,
+
                     _ => throw new ArgumentException("An error occured choosing a random direction for the next wall."),
                 };
             }
@@ -98,24 +95,25 @@ namespace Assets.Scripts.Levels
         [Button]
         public void GenerateSimpleSegment()
         {
-            //seed = (uint)DateTime.Now.Ticks;
+            seed = (uint)DateTime.Now.Ticks;
             Unity.Mathematics.Random prng = new(seed);
 
             int maxWalls = prng.NextInt(3, 8);
 
             Point point = new(float3.zero, maxWalls, ref prng);
 
-            List<Vector3> vertices = new();
-            PlaceEndVertices(point.directions[0], point, ref vertices);
+            List <Vector3> vertices = new();
+            PlaceStarterVertices(point.directions[0], point, ref vertices);
 
-            List<int> triangles = new()
-            {
-                0, 1, 3, 1, 2, 3
-            };
+            List<int> triangles = new() { 0, 1, 3, 1, 2, 3 };
 
             int verts = 4;
 
-            for (int i = 0; i < maxWalls; i++) // UP, LEFT, UP, LEFT
+            // PLACEHOLDER VISUAL
+            GameObject cu = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cu.transform.position = new(point.position.x, 0, point.position.z);
+
+            for (int i = 0; i < maxWalls; i++)
             {
                 int distance = 5;
 
@@ -123,12 +121,95 @@ namespace Assets.Scripts.Levels
 
                 if (point.directions[i + 1] != Direction.NONE)
                 {
-                    float dotProduct = DotProduct(normalizedDirections[(int)point.directions[i]], normalizedDirections[(int)point.directions[i + 1]]);
+                    Direction lastDir = point.directions[i];
+                    Direction nextDir = point.directions[i + 1];
 
-                    vertices.Add(new Vector3(point.position.x - 1, 0, point.position.z - 1));
-                    vertices.Add(new Vector3(point.position.x - 1, 5, point.position.z - 1));   
-                    vertices.Add(new Vector3(point.position.x + 1, 5, point.position.z + 1));
-                    vertices.Add(new Vector3(point.position.x + 1, 0, point.position.z + 1));
+                    float[] offsets = new float[4];
+
+                    if (lastDir == Direction.UP)
+                    {
+                        if (nextDir == Direction.LEFT)
+                        {
+                            offsets = new float[] { -1, -1, 1, 1 };
+                        }
+
+                        else if (nextDir == Direction.RIGHT)
+                        {
+                            offsets = new float[] { -1, 1, 1, -1 };
+                        }
+
+                        else if (nextDir == Direction.UP)
+                        {
+                            offsets = new float[] { -1, 0, 1, 0 };
+                        }
+                    }
+
+                    else if (lastDir == Direction.RIGHT)
+                    {
+                        if (nextDir == Direction.UP)
+                        {
+                            offsets = new float[] { -1, 1, 1, -1 };
+                        }
+
+                        else if (nextDir == Direction.DOWN)
+                        {
+                            offsets = new float[] { 1, 1, -1, -1 };
+                        }
+
+                        else if (nextDir == Direction.RIGHT)
+                        {
+                            offsets = new float[] { 0, 1, 0, -1 };
+                        }
+                    }
+
+                    else if (lastDir == Direction.DOWN)
+                    {
+                        if (nextDir == Direction.LEFT)
+                        {
+                            offsets = new float[] { 1, -1, -1, 1 };
+                        }
+
+                        else if (nextDir == Direction.RIGHT)
+                        {
+                            offsets = new float[] { 1, 1, -1, -1 };
+                        }
+
+                        else if (nextDir == Direction.DOWN)
+                        {
+                            offsets = new float[] { 1, 0, -1, 0 };
+                        }
+                    }
+
+                    else if (lastDir == Direction.LEFT)
+                    {
+                        if (nextDir == Direction.UP)
+                        {
+                            offsets = new float[] { -1, -1, 1, 1 };
+                        }
+
+                        else if (nextDir == Direction.DOWN)
+                        {
+                            offsets = new float[] { 1, -1, -1, 1 };
+                        }
+
+                        else if (nextDir == Direction.LEFT)
+                        {
+                            offsets = new float[] { 0, -1, 0, 1 };
+                        }
+                    }
+
+                    vertices.AddRange(new List<Vector3>
+                    {
+                        new(point.position.x + offsets[0], 0, point.position.z + offsets[1]),
+                        new(point.position.x + offsets[0], 5, point.position.z + offsets[1]),
+                        new(point.position.x + offsets[2], 5, point.position.z + offsets[3]),
+                        new(point.position.x + offsets[2], 0, point.position.z + offsets[3])
+
+                        //new(point.position.x - 1, 0, point.position.z - 1),
+                        //new(point.position.x - 1, 5, point.position.z - 1),
+                        //new(point.position.x + 1, 5, point.position.z + 1),
+                        //new(point.position.x + 1, 0, point.position.z + 1)
+                    });
 
                     triangles.AddRange(new List<int>
                     {
@@ -146,6 +227,8 @@ namespace Assets.Scripts.Levels
                 c.transform.position = new(point.position.x, 5, point.position.z);
             }
 
+            triangles.AddRange(new List<int> { verts - 2, verts - 3, verts - 1, verts - 4, verts - 1, verts - 3 });
+
             Mesh mesh = new()
             {
                 vertices = vertices.ToArray(),
@@ -159,9 +242,7 @@ namespace Assets.Scripts.Levels
             obj.GetComponent<MeshRenderer>().material = gray;
         }
 
-        private static float DotProduct(float3 a, float3 b) => (a.x * b.x) + (a.y * b.y) + (a.z * b.z); 
-
-        private void PlaceEndVertices(Direction direction, Point point, ref List<Vector3> vertices)
+        private void PlaceStarterVertices(Direction direction, Point point, ref List<Vector3> vertices)
         {
             var (x, z) = (point.position.x, point.position.z);
 
@@ -196,6 +277,10 @@ namespace Assets.Scripts.Levels
         {
 
         }
+
+
+
+        private static float DotProduct(float3 a, float3 b) => (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 
         /*[Button]
         public void GenerateMaze()
