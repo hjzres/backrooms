@@ -1,12 +1,11 @@
+using NaughtyAttributes;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using Unity.Burst;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Collections;
 using UnityEngine;
-using NaughtyAttributes;
 
 namespace Assets.Scripts.Levels
 {
@@ -54,61 +53,57 @@ namespace Assets.Scripts.Levels
         };
 
         // Vertices are created in a clockwise direction starting with the bottom left and ending with the bottom right.
-        // Offset values follow the order aforementioned. [0] is bottom left, [1] is top left, [2] is top right, [3] is bottom right.
-        private static float[] VertexOffsetTable(Direction lastDirection, Direction nextDirection, float thickness)
+        // Offset values follow the order aforementioned. x is bottom left, y is top left, z is top right, w is bottom right.
+        private static float4 VertexOffsetTable(Direction lastDirection, Direction nextDirection, float t)
         {
             return (lastDirection, nextDirection) switch
             {
-                (Direction.UP, Direction.UP) => new[] { -thickness, 0f, thickness, 0f },
-                (Direction.UP, Direction.RIGHT) => new[] { -thickness, thickness, thickness, -thickness },
-                (Direction.UP, Direction.LEFT) => new[] { -thickness, -thickness, thickness, thickness },
-                (Direction.UP, Direction.NONE) => new[] { -thickness, 0f, thickness, 0f },
+                (Direction.UP, Direction.UP) => new(-t, 0f, t, 0f),
+                (Direction.UP, Direction.RIGHT) => new(-t, t, t, -t),
+                (Direction.UP, Direction.LEFT) => new(-t, -t, t, t),
+                (Direction.UP, Direction.NONE) => new(-t, 0f, t, 0f),
 
-                (Direction.RIGHT, Direction.UP) => new[] { -thickness, thickness, thickness, -thickness },
-                (Direction.RIGHT, Direction.RIGHT) => new[] { 0f, thickness, 0f, -thickness },
-                (Direction.RIGHT, Direction.DOWN) => new[] { thickness, thickness, -thickness, -thickness },
-                (Direction.RIGHT, Direction.NONE) => new[] { 0f, thickness, 0f, -thickness },
+                (Direction.RIGHT, Direction.UP) => new(-t, t, t, -t),
+                (Direction.RIGHT, Direction.RIGHT) => new(0f, t, 0f, -t),
+                (Direction.RIGHT, Direction.DOWN) => new(t, t, -t, -t),
+                (Direction.RIGHT, Direction.NONE) => new(0f, t, 0f, -t),
 
-                (Direction.DOWN, Direction.RIGHT) => new[] { thickness, thickness, -thickness, -thickness },
-                (Direction.DOWN, Direction.DOWN) => new[] { thickness, 0f, -thickness, 0f },
-                (Direction.DOWN, Direction.LEFT) => new[] { thickness, -thickness, -thickness, thickness },
-                (Direction.DOWN, Direction.NONE) => new[] { thickness, 0f, -thickness, 0f },
+                (Direction.DOWN, Direction.RIGHT) => new(t, t, -t, -t),
+                (Direction.DOWN, Direction.DOWN) => new(t, 0f, -t, 0f),
+                (Direction.DOWN, Direction.LEFT) => new(t, -t, -t, t),
+                (Direction.DOWN, Direction.NONE) => new(t, 0f, -t, 0f),
 
-                (Direction.LEFT, Direction.UP) => new[] { -thickness, -thickness, thickness, thickness },
-                (Direction.LEFT, Direction.DOWN) => new[] { thickness, -thickness, -thickness, thickness },
-                (Direction.LEFT, Direction.LEFT) => new[] { 0f, -thickness, 0f, thickness },
-                (Direction.LEFT, Direction.NONE) => new[] { 0f, -thickness, 0f, thickness },
+                (Direction.LEFT, Direction.UP) => new(-t, -t, t, t),
+                (Direction.LEFT, Direction.DOWN) => new(t, -t, -t, t),
+                (Direction.LEFT, Direction.LEFT) => new(0f, -t, 0f, t),
+                (Direction.LEFT, Direction.NONE) => new(0f, -t, 0f, t),
+
+                (Direction.NONE, Direction.NONE) => new(0f, 0f, 0f, 0f),
 
                 _ => throw new ArgumentException("Error looking up vertex offset. Method: [VertexOffsetLookup()].")
             };
         }
 
-        public struct Point
+        public struct Point : IDisposable
         {
             public float3 position;
-
-            public Direction nextDir;
 
             public NativeArray<Direction> directions;
 
             public Point(float3 position, int maxDirections, ref Unity.Mathematics.Random prng)
             {
                 this.position = position;
-                directions = new(maxDirections + 2, Allocator.TempJob);
-                nextDir = Direction.NONE;
+                directions = new(maxDirections + 1, Allocator.TempJob);
 
                 Direction lastDir = Direction.NONE;
 
                 for (int i = 0; i < maxDirections; i++)
                 {
-                    if (i == maxDirections + 1 || i == maxDirections + 2)
-                    {
-                        directions[i] = Direction.NONE;
-                    }
-
                     directions[i] = RandomizeDirection(lastDir, ref prng);
                     lastDir = directions[i];
                 }
+
+                directions[maxDirections] = Direction.NONE;
             }
 
             public static Direction RandomizeDirection(Direction lastDirection, ref Unity.Mathematics.Random prng)
@@ -125,35 +120,36 @@ namespace Assets.Scripts.Levels
                     _ => throw new ArgumentException("An error occured choosing a random direction for the next wall."),
                 };
             }
+
+            public void Dispose()
+            {
+                if (directions.IsCreated)
+                {
+                    directions.Dispose();
+                }
+            }
         }
 
+        [BurstCompile]
         private struct SegmentBuilder : IJob
         {
-            public NativeArray<float3> vertices;
+            [NativeDisableUnsafePtrRestriction] public Point point;
 
-            public NativeArray<int> triangles;
+            [WriteOnly] public NativeArray<float3> vertices;
+
+            [WriteOnly] public NativeArray<int> triangles;
 
             public float thickness;
-
-            public Point point;
-
-            public int maxWalls;
 
             public void Execute()
             {
                 CreateOriginVerts(point, ref vertices);
-
-                triangles[0] = 0;
-                triangles[1] = 1;
-                triangles[2] = 3;
-                triangles[3] = 1;
-                triangles[4] = 2;
-                triangles[5] = 3;
+                SetTriangleQuad(0, 0, 1, 3, 2);
 
                 int verts = 4;
                 int tris = 6;
 
-                for (int i = 0; i <= maxWalls; i++)
+                for (int i = 0; i <= point.directions.Length - 2; i++)
                 {
                     int distance = 5;
 
@@ -162,60 +158,75 @@ namespace Assets.Scripts.Levels
 
                     point.position += NormalizedDirections[(int)lastDir] * distance;
 
-                    float[] offsets = VertexOffsetTable(lastDir, nextDir, thickness);
+                    float4 offsets = VertexOffsetTable(lastDir, nextDir, thickness);
 
-                    vertices[verts] = new float3(point.position.x + offsets[0], 0, point.position.z + offsets[1]);
-                    vertices[verts + 1] = new float3(point.position.x + offsets[0], 5, point.position.z + offsets[1]);
-                    vertices[verts + 2] = new float3(point.position.x + offsets[2], 5, point.position.z + offsets[3]);
-                    vertices[verts + 3] = new float3(point.position.x + offsets[2], 0, point.position.z + offsets[3]);
+                    vertices[verts] = new float3(point.position.x + offsets.x, 0, point.position.z + offsets.y);
+                    vertices[verts + 1] = new float3(point.position.x + offsets.x, 5, point.position.z + offsets.y);
+                    vertices[verts + 2] = new float3(point.position.x + offsets.z, 5, point.position.z + offsets.w);
+                    vertices[verts + 3] = new float3(point.position.x + offsets.z, 0, point.position.z + offsets.w);
 
-                    triangles[tris] = verts;
-                    triangles[tris + 1] = verts + 1;
-                    triangles[tris + 2] = verts - 4;
-
-                    triangles[tris + 3] = verts + 1;
-                    triangles[tris + 4] = verts - 3;
-                    triangles[tris + 5] = verts - 4;
-
-                    triangles[tris + 6] = verts - 1;
-                    triangles[tris + 7] = verts - 2;
-                    triangles[tris + 8] = verts + 2;
-
-                    triangles[tris + 9] = verts - 1;
-                    triangles[tris + 10] = verts + 2;
-                    triangles[tris + 11] = verts + 3;
+                    SetTriangleQuad(tris, verts, verts + 1, verts - 4, verts - 3);
+                    SetTriangleQuad(tris + 6, verts + 3, verts - 1, verts + 2, verts - 2);
 
                     verts += 4;
                     tris += 12;
                 }
 
-                triangles[triangles.Length - 6] = verts - 2;
-                triangles[triangles.Length - 5] = verts - 3;
-                triangles[triangles.Length - 4] = verts - 1;
-                triangles[triangles.Length - 3] = verts - 4;
-                triangles[triangles.Length - 2] = verts - 1;
-                triangles[triangles.Length - 1] = verts - 3;
+                SetTriangleQuad(tris, verts - 2, verts - 3, verts - 1, verts - 4);
+            }
+
+            private void SetTriangleQuad(int index, int v0, int v1, int v2, int v3)
+            {
+                triangles[index] = v0;
+                triangles[index + 1] = v1;
+                triangles[index + 2] = v2;
+                triangles[index + 3] = v3;
+                triangles[index + 4] = v2;
+                triangles[index + 5] = v1;
             }
 
             private readonly void CreateOriginVerts(Point point, ref NativeArray<float3> vertices)
             {
                 Direction direction = point.directions[0];
-                var (x, z) = (point.position.x, point.position.z);
+                float x = point.position.x;
+                float z = point.position.z;
 
-                var offsets = direction switch
+                float minX = x - thickness, maxX = x + thickness;
+                float minZ = z - thickness, maxZ = z + thickness;
+
+                switch (direction)
                 {
-                    Direction.UP => new[] { (x - thickness, z - thickness), (x - thickness, z - thickness), (x + thickness, z - thickness), (x + thickness, z - thickness) },
-                    Direction.RIGHT => new[] { (x - thickness, z + thickness), (x - thickness, z + thickness), (x - thickness, z - thickness), (x - thickness, z - thickness) },
-                    Direction.DOWN => new[] { (x + thickness, z + thickness), (x + thickness, z + thickness), (x - thickness, z + thickness), (x - thickness, z + thickness) },
-                    Direction.LEFT => new[] { (x + thickness, z - thickness), (x + thickness, z - thickness), (x + thickness, z + thickness), (x + thickness, z + thickness) },
+                    case Direction.UP:
+                        vertices[0] = new float3(minX, 0, minZ);
+                        vertices[1] = new float3(minX, 5, minZ);
+                        vertices[2] = new float3(maxX, 5, minZ);
+                        vertices[3] = new float3(maxX, 0, minZ);
+                        break;
 
-                    _ => throw new ArgumentException($"Direction not supported: {direction}")
-                };
+                    case Direction.RIGHT:
+                        vertices[0] = new float3(minX, 0, maxZ); 
+                        vertices[1] = new float3(minX, 5, maxZ);
+                        vertices[2] = new float3(minX, 5, minZ); 
+                        vertices[3] = new float3(minX, 0, minZ);
+                        break;
 
-                vertices[0] = new Vector3(offsets[0].Item1, 0, offsets[0].Item2);
-                vertices[1] = new Vector3(offsets[1].Item1, 5, offsets[1].Item2);
-                vertices[2] = new Vector3(offsets[2].Item1, 5, offsets[2].Item2);
-                vertices[3] = new Vector3(offsets[3].Item1, 0, offsets[3].Item2);
+                    case Direction.DOWN:
+                        vertices[0] = new float3(maxX, 0, maxZ); 
+                        vertices[1] = new float3(maxX, 5, maxZ);
+                        vertices[2] = new float3(minX, 5, maxZ); 
+                        vertices[3] = new float3(minX, 0, maxZ);
+                        break;
+
+                    case Direction.LEFT:
+                        vertices[0] = new float3(maxX, 0, minZ); 
+                        vertices[1] = new float3(maxX, 5, minZ);
+                        vertices[2] = new float3(maxX, 5, maxZ); 
+                        vertices[3] = new float3(maxX, 0, maxZ);
+                        break;
+
+                    default:
+                        throw new ArgumentException("Error making origin vertices. Method: [CreateOriginVerts()].");
+                }
             }
         }
 
@@ -229,50 +240,8 @@ namespace Assets.Scripts.Levels
 
             Point point = new(float3.zero, maxWalls, ref prng);
 
-            Vector3[] vertices = new Vector3[point.directions.Length * 4];
-            int[] triangles = new int[(point.directions.Length * 12)];
-
-            NativeArray<float3> vertsArr = new(vertices.Length, Allocator.TempJob);
-            NativeArray<int> trisArr = new(triangles.Length, Allocator.TempJob);
-
-            //List <Vector3> vertices = new();
-            //PlaceStarterVertices(point.directions[0], point, ref vertices);
-
-            //List<int> triangles = new() { 0, 1, 3, 1, 2, 3 };
-
-            //int verts = 4;
-
-            //for (int i = 0; i < maxWalls + 1; i++)
-            //{
-            //    int distance = 5;
-
-            //    Direction lastDir = point.directions[i];
-            //    point.position += NormalizedDirections[(int)lastDir] * distance;
-
-            //    Direction nextDir = point.directions[i + 1];
-
-            //    float[] offsets = VertexOffsetTable(lastDir, nextDir, thickness);
-
-            //    vertices.AddRange(new List<Vector3>
-            //    {
-            //        new(point.position.x + offsets[0], 0, point.position.z + offsets[1]),
-            //        new(point.position.x + offsets[0], 5, point.position.z + offsets[1]),
-            //        new(point.position.x + offsets[2], 5, point.position.z + offsets[3]),
-            //        new(point.position.x + offsets[2], 0, point.position.z + offsets[3])
-            //    });
-
-            //    triangles.AddRange(new List<int>
-            //    {
-            //        verts, verts + 1, verts - 4,
-            //        verts + 1, verts - 3, verts - 4,
-            //        verts - 1, verts - 2, verts + 2,
-            //        verts - 1, verts + 2, verts + 3
-            //    });
-
-            //    verts += 4;
-            //}
-
-            //triangles.AddRange(new List<int> { verts - 2, verts - 3, verts - 1, verts - 4, verts - 1, verts - 3 });
+            NativeArray<float3> vertsArr = new(point.directions.Length * 4, Allocator.TempJob);
+            NativeArray<int> trisArr = new(point.directions.Length * 12, Allocator.TempJob);
 
             SegmentBuilder job = new()
             {
@@ -280,21 +249,15 @@ namespace Assets.Scripts.Levels
                 triangles = trisArr,
                 thickness = thickness,
                 point = point,
-                maxWalls = maxWalls
             };
 
-            JobHandle handle = job.Schedule();
-            handle.Complete();
+            job.Schedule().Complete();
 
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i] = vertsArr[i];
-            }
+            Vector3[] vertices = new Vector3[point.directions.Length * 4];
+            int[] triangles = new int[point.directions.Length * 12];
 
-            for (int i = 0; i < triangles.Length; i++)
-            {
-                triangles[i] = trisArr[i];
-            }
+            vertsArr.Reinterpret<Vector3>().CopyTo(vertices);
+            trisArr.CopyTo(triangles);
 
             vertsArr.Dispose();
             trisArr.Dispose();
@@ -306,6 +269,7 @@ namespace Assets.Scripts.Levels
             };
 
             mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
 
             GameObject obj = new("Mesh", typeof(MeshFilter), typeof(MeshRenderer));
             obj.GetComponent<MeshFilter>().mesh = mesh;
