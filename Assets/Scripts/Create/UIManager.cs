@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using Unity.Services.Core;
 using Unity.Services.Authentication;
 using Unity.Services.Multiplayer;
+using Unity.Netcode;
 
 namespace Create
 {
@@ -85,7 +86,13 @@ namespace Create
                 Debug.Log($"Session ID: {currentSession.Id}");
                 Debug.Log($"Join Code: {currentSession.Code}");
 
-                SceneManager.LoadScene(5);
+                if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
+                {
+                    NetworkManager.Singleton.StartHost();
+                }
+
+                string sceneName = System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(5));
+                NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
             }
             catch (Exception e)
             {

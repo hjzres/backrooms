@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using Unity.Netcode;
 
@@ -53,7 +54,7 @@ public class AutoStartHostDebug : MonoBehaviour
             return;
         }
 
-        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjectsList.Exists(obj => obj.IsPlayerObject))
+        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjectsList.Any(obj => obj.IsPlayerObject))
         {
             Debug.LogError("FAILED: No player object was spawned.");
             return;
