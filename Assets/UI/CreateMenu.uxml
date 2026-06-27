@@ -1,24 +1,30 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/stylesheet.uss?fileID=7433441132597879392&amp;guid=6d7a442d01679c34b9dc39dcfc263966&amp;type=3#stylesheet" />
-    <ui:VisualElement name="Container" style="flex-grow: 1;">
-        <ui:VisualElement name="Background" enabled="true" style="flex-grow: 0; width: 90%; height: 90%; border-top-width: 20px; border-right-width: 20px; border-bottom-width: 20px; border-left-width: 20px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); flex-shrink: 0; margin-top: 0%; margin-right: 0%; margin-bottom: 0%; margin-left: 0%; position: relative; top: 5%; left: 5%; right: 5%; bottom: 5%;">
-            <ui:Label text="&lt;Player Username&gt;" name="Name" style="-unity-text-align: upper-center; font-size: 100%;" />
-            <ui:VisualElement name="Settings" style="flex-grow: 1;">
-                <ui:VisualElement name="MaxPlayers" style="flex-grow: 0; flex-direction: row; font-size: 100%; align-items: center; justify-content: space-between; align-self: stretch; flex-shrink: 0;">
-                    <ui:Label text="Max Players" class="SettingsText" style="-unity-text-align: middle-left;" />
-                    <ui:VisualElement name="Input" style="flex-grow: 0; flex-direction: row; justify-content: space-between; align-items: center; align-self: auto; flex-shrink: 0; flex-wrap: nowrap; align-content: auto; white-space: normal; -unity-text-align: upper-left; background-position-y: center; background-position-x: center;">
-                        <ui:Label text="6" name="Label" style="-unity-text-align: middle-left;" />
-                        <ui:VisualElement name="Buttons" style="flex-grow: 0; flex-direction: column; justify-content: space-around; flex-shrink: 0;">
-                            <ui:Button text="Up" name="UpButton" style="width: 100%;" />
-                            <ui:Button text="Down" name="DownButton" style="width: 100%;" />
+    <ui:VisualElement class="screen">
+        <ui:VisualElement name="Container" class="panel" style="width: 460px;">
+            <ui:Label text="CREATE SESSION" class="heading-text" />
+            <ui:VisualElement name="Background">
+                <ui:Label text="&lt;Player Username&gt;" name="Name" style="font-size: 14px; color: rgba(200, 180, 120, 0.5); -unity-text-align: upper-center; margin-bottom: 20px; letter-spacing: 3px;" />
+                <ui:VisualElement class="divider" />
+                <ui:VisualElement name="Settings" style="padding: 12px 0;">
+                    <ui:VisualElement name="MaxPlayers" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <ui:Label text="MAX PLAYERS" class="label-text" />
+                        <ui:VisualElement name="Input" style="flex-direction: row; align-items: center;">
+                            <ui:Button text="-" name="DownButton" class="button-stepper" style="margin-right: 10px;" />
+                            <ui:Label text="6" name="Label" style="font-size: 26px; color: rgb(200, 180, 120); width: 40px; -unity-text-align: middle-center; -unity-font-style: bold;" />
+                            <ui:Button text="+" name="UpButton" class="button-stepper" style="margin-left: 10px;" />
                         </ui:VisualElement>
                     </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row; align-items: center; justify-content: space-between;">
+                        <ui:Label text="PRIVATE" class="label-text" />
+                        <ui:Toggle name="Private" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Toggle label="Private" name="Private" style="font-size: 100%; justify-content: space-around; align-items: center; align-self: stretch; flex-direction: row;" />
+                <ui:VisualElement class="divider" />
             </ui:VisualElement>
-            <ui:VisualElement name="Buttons" style="flex-grow: 0; width: 100%; height: 10%; flex-shrink: 0; flex-direction: row; align-items: stretch; justify-content: space-between;">
-                <ui:Button text="Cancel" name="CancelButton" style="width: 10%;" />
-                <ui:Button text="Create" name="CreateButton" style="width: 10%;" />
+            <ui:VisualElement name="Buttons" style="flex-direction: row; justify-content: space-between; margin-top: 20px;">
+                <ui:Button text="CANCEL" name="CancelButton" class="button-small" />
+                <ui:Button text="CREATE" name="CreateButton" class="button-small button-accent" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

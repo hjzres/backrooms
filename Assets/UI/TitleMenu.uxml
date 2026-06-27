@@ -1,12 +1,13 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/stylesheet.uss?fileID=7433441132597879392&amp;guid=6d7a442d01679c34b9dc39dcfc263966&amp;type=3#stylesheet" />
-    <ui:VisualElement style="flex-grow: 1;">
-        <ui:VisualElement name="Container" style="flex-grow: 1; align-self: center; align-items: stretch; justify-content: space-between; flex-direction: column; width: 40%;">
-            <ui:Label text="Backrooms" name="Title" style="font-size: 50%; -unity-text-align: upper-center;" />
-            <ui:VisualElement name="Buttons" style="flex-grow: 1; background-size: 100% 30%; justify-content: space-evenly; position: relative; top: 5%; height: 20%; flex-direction: column; align-items: center;">
-                <ui:Button text="Play" name="PlayButton" class="button" style="bottom: 5%; text-overflow: clip;" />
-                <ui:Button text="Options" name="OptionsButton" class="button" style="bottom: 5%;" />
-                <ui:Button text="Quit" name="QuitButton" class="button" style="bottom: 5%;" />
+    <ui:VisualElement class="screen">
+        <ui:VisualElement name="Container" style="align-items: center;">
+            <ui:Label text="BACKROOMS" name="Title" class="title-text" />
+            <ui:Label text="ENTER AT YOUR OWN RISK" class="subtitle-text" />
+            <ui:VisualElement name="Buttons" style="align-items: center;">
+                <ui:Button text="PLAY" name="PlayButton" class="button button-accent" />
+                <ui:Button text="OPTIONS" name="OptionsButton" class="button" />
+                <ui:Button text="QUIT" name="QuitButton" class="button" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

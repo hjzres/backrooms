@@ -1,19 +1,198 @@
 :root {
 }
 
+/* ── Fullscreen dark background ── */
+.screen {
+    flex-grow: 1;
+    background-color: rgb(18, 16, 12);
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Panel card ── */
+.panel {
+    background-color: rgba(30, 27, 20, 0.92);
+    border-width: 1px;
+    border-color: rgba(85, 75, 50, 0.4);
+    border-radius: 6px;
+    padding: 32px;
+}
+
+/* ── Typography ── */
+.title-text {
+    font-size: 72px;
+    color: rgb(200, 180, 120);
+    -unity-text-align: upper-center;
+    -unity-font-style: bold;
+    letter-spacing: 10px;
+    margin-bottom: 8px;
+}
+
+.subtitle-text {
+    font-size: 13px;
+    color: rgba(200, 180, 120, 0.45);
+    -unity-text-align: upper-center;
+    letter-spacing: 6px;
+    margin-bottom: 56px;
+}
+
+.heading-text {
+    font-size: 30px;
+    color: rgb(200, 180, 120);
+    -unity-text-align: upper-center;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+    margin-bottom: 28px;
+}
+
+.label-text {
+    font-size: 18px;
+    color: rgb(210, 200, 170);
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+}
+
+/* ── Buttons ── */
 .button {
-    height: 20%;
-    font-size: 200%;
-    width: 40%;
+    height: 56px;
+    font-size: 20px;
+    width: 280px;
+    background-color: rgba(50, 45, 30, 0.8);
+    border-width: 1px;
+    border-color: rgba(120, 105, 65, 0.4);
+    border-radius: 4px;
+    color: rgb(210, 200, 170);
+    -unity-font-style: bold;
+    padding: 12px 24px;
+    margin: 5px 0;
+    letter-spacing: 3px;
+    transition-duration: 0.15s;
 }
 
+.button:hover {
+    background-color: rgba(70, 62, 40, 0.9);
+    border-color: rgba(200, 180, 120, 0.6);
+    color: rgb(230, 210, 150);
+}
+
+.button:active {
+    background-color: rgba(85, 75, 48, 0.95);
+    scale: 0.97;
+}
+
+.button-small {
+    height: 42px;
+    font-size: 15px;
+    background-color: rgba(50, 45, 30, 0.8);
+    border-width: 1px;
+    border-color: rgba(120, 105, 65, 0.4);
+    border-radius: 3px;
+    color: rgb(210, 200, 170);
+    -unity-font-style: bold;
+    padding: 8px 20px;
+    letter-spacing: 2px;
+    transition-duration: 0.15s;
+}
+
+.button-small:hover {
+    background-color: rgba(70, 62, 40, 0.9);
+    border-color: rgba(200, 180, 120, 0.6);
+    color: rgb(230, 210, 150);
+}
+
+.button-small:active {
+    scale: 0.97;
+}
+
+.button-accent {
+    background-color: rgba(120, 105, 65, 0.5);
+    border-color: rgba(200, 180, 120, 0.6);
+    color: rgb(200, 180, 120);
+}
+
+.button-accent:hover {
+    background-color: rgba(145, 128, 78, 0.65);
+    border-color: rgb(230, 210, 150);
+    color: rgb(230, 210, 150);
+}
+
+.button-stepper {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    background-color: rgba(50, 45, 30, 0.8);
+    border-width: 1px;
+    border-color: rgba(120, 105, 65, 0.4);
+    border-radius: 3px;
+    color: rgb(200, 180, 120);
+    -unity-font-style: bold;
+    padding: 0;
+    transition-duration: 0.15s;
+}
+
+.button-stepper:hover {
+    background-color: rgba(70, 62, 40, 0.9);
+    border-color: rgba(200, 180, 120, 0.6);
+}
+
+/* ── Divider ── */
+.divider {
+    height: 1px;
+    background-color: rgba(85, 75, 50, 0.35);
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+/* ── Settings text (legacy compat) ── */
 .SettingsText {
-    font-size: 100%;
+    font-size: 18px;
+    color: rgb(210, 200, 170);
+    letter-spacing: 2px;
 }
 
+/* ── Toggle styling ── */
 #Container > #Background > #Settings > #Private > .unity-toggle__input {
     justify-content: flex-end;
 }
 
-#Container > #Background > #Settings > #Private > .unity-toggle__input > #unity-checkmark {
+.unity-toggle__input > .unity-toggle__checkmark {
+    background-color: rgba(50, 45, 30, 0.8);
+    border-color: rgba(120, 105, 65, 0.5);
+    -unity-background-image-tint-color: rgb(200, 180, 120);
+}
+
+/* ── Input field styling ── */
+.unity-text-field__input,
+.unity-integer-field__input {
+    background-color: rgba(40, 36, 25, 0.9);
+    border-width: 1px;
+    border-color: rgba(120, 105, 65, 0.4);
+    border-radius: 3px;
+    color: rgb(200, 180, 120);
+    font-size: 28px;
+    padding: 10px 16px;
+    -unity-text-align: middle-center;
+    letter-spacing: 8px;
+}
+
+.unity-text-field__input:focus,
+.unity-integer-field__input:focus {
+    border-color: rgb(200, 180, 120);
+}
+
+/* ── ScrollView ── */
+.unity-scroll-view {
+    background-color: rgba(15, 13, 10, 0.4);
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(85, 75, 50, 0.25);
+}
+
+.unity-scroller--vertical > .unity-slider > .unity-base-slider__tracker {
+    background-color: rgba(50, 45, 30, 0.4);
+}
+
+.unity-scroller--vertical > .unity-slider > .unity-base-slider__dragger {
+    background-color: rgba(200, 180, 120, 0.35);
+    border-radius: 3px;
 }

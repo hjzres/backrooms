@@ -1,14 +1,17 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/stylesheet.uss?fileID=7433441132597879392&amp;guid=6d7a442d01679c34b9dc39dcfc263966&amp;type=3#stylesheet" />
-    <ui:VisualElement name="Container" style="flex-grow: 1;">
-        <ui:VisualElement name="Background" enabled="true" style="flex-grow: 0; width: 90%; height: 90%; border-top-width: 20px; border-right-width: 20px; border-bottom-width: 20px; border-left-width: 20px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); flex-shrink: 0; margin-top: 0%; margin-right: 0%; margin-bottom: 0%; margin-left: 0%; position: relative; top: 5%; left: 5%; right: 5%; bottom: 5%;">
-            <ui:VisualElement name="ButtonContainer" style="flex-grow: 0; flex-direction: row; align-items: flex-start; height: 10%; flex-shrink: 0;">
-                <ui:Button text="Back" name="BackButton" style="white-space: pre;" />
+    <ui:VisualElement class="screen">
+        <ui:VisualElement name="Container" class="panel" style="width: 460px; align-items: center;">
+            <ui:VisualElement name="Background">
+                <ui:Label text="JOIN BY CODE" class="heading-text" style="margin-bottom: 36px;" />
+                <ui:VisualElement name="CodeJoinContainer" style="align-items: center;">
+                    <ui:IntegerField value="0" focusable="true" style="width: 280px; margin-bottom: 28px;" />
+                    <ui:Button text="JOIN" name="JoinButton" class="button button-accent" style="width: 200px;" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="CodeJoinContainer" style="flex-grow: 1; align-items: center; justify-content: space-evenly; flex-direction: column;">
-                <ui:IntegerField value="12345678" focusable="true" style="flex-direction: row; font-size: 50px;" />
-                <ui:Button text="Join" name="JoinButton" style="width: 10%; font-size: 50%;" />
-            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="ButtonContainer" style="position: absolute; left: 24px; bottom: 24px;">
+            <ui:Button text="BACK" name="BackButton" class="button-small" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
