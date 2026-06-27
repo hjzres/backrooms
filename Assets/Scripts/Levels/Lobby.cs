@@ -4,7 +4,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 
 namespace Assets.Scripts.Levels
@@ -139,6 +138,8 @@ namespace Assets.Scripts.Levels
 
             [WriteOnly] public NativeArray<int> triangles;
 
+            [WriteOnly] public NativeArray<float2> uvs;
+
             public NativeArray<Direction> directions;
 
             public float3 position;
@@ -147,11 +148,20 @@ namespace Assets.Scripts.Levels
 
             public void Execute()
             {
-                CreateOriginVerts(ref vertices);
+                float4 startOffsets = GetOriginOffsets(directions[0], thickness);
+
+                vertices[0] = new float3(position.x + startOffsets.x, 0, position.z + startOffsets.y);
+                vertices[1] = new float3(position.x + startOffsets.x, 5, position.z + startOffsets.y);
+                vertices[2] = new float3(position.x + startOffsets.z, 5, position.z + startOffsets.w);
+                vertices[3] = new float3(position.x + startOffsets.z, 0, position.z + startOffsets.w);
+
+                SetQuadUVs(uvs, 0);
                 SetTriangleQuad(0, 0, 1, 3, 2);
 
-                int verts = 4;
-                int tris = 6;
+                int verts = 4, tris = 6;
+
+                float4 prevOffsets = startOffsets;
+                float3 prevPosition = position;
 
                 for (int i = 0; i <= directions.Length - 2; i++)
                 {
@@ -160,23 +170,40 @@ namespace Assets.Scripts.Levels
                     Direction lastDir = directions[i];
                     Direction nextDir = directions[i + 1];
 
+                    float3 currentStartPos = prevPosition;
                     position += NormalizedDirections[(int)lastDir] * distance;
+                    float3 currentEndPos = position;
 
                     float4 offsets = VertexOffsetTable(lastDir, nextDir, thickness);
 
-                    vertices[verts] = new float3(position.x + offsets.x, 0, position.z + offsets.y);
-                    vertices[verts + 1] = new float3(position.x + offsets.x, 5, position.z + offsets.y);
-                    vertices[verts + 2] = new float3(position.x + offsets.z, 5, position.z + offsets.w);
-                    vertices[verts + 3] = new float3(position.x + offsets.z, 0, position.z + offsets.w);
+                    vertices[verts] = new float3(currentEndPos.x + offsets.x, 0, currentEndPos.z + offsets.y);
+                    vertices[verts + 1] = new float3(currentEndPos.x + offsets.x, 5, currentEndPos.z + offsets.y);
+                    vertices[verts + 2] = new float3(currentStartPos.x + prevOffsets.x, 5, currentStartPos.z + prevOffsets.y);
+                    vertices[verts + 3] = new float3(currentStartPos.x + prevOffsets.x, 0, currentStartPos.z + prevOffsets.y);
+                    SetQuadUVs(uvs, verts);
+                    SetTriangleQuad(tris, verts, verts + 1, verts + 3, verts + 2);
 
-                    SetTriangleQuad(tris, verts, verts + 1, verts - 4, verts - 3);
-                    SetTriangleQuad(tris + 6, verts + 3, verts - 1, verts + 2, verts - 2);
+                    vertices[verts + 4] = new float3(currentStartPos.x + prevOffsets.z, 0, currentStartPos.z + prevOffsets.w);
+                    vertices[verts + 5] = new float3(currentStartPos.x + prevOffsets.z, 5, currentStartPos.z + prevOffsets.w);
+                    vertices[verts + 6] = new float3(currentEndPos.x + offsets.z, 5, currentEndPos.z + offsets.w);
+                    vertices[verts + 7] = new float3(currentEndPos.x + offsets.z, 0, currentEndPos.z + offsets.w);
+                    SetQuadUVs(uvs, verts + 4);
+                    SetTriangleQuad(tris + 6, verts + 4, verts + 5, verts + 7, verts + 6);
 
-                    verts += 4;
+                    prevOffsets = offsets;
+                    prevPosition = currentEndPos;
+
+                    verts += 8;
                     tris += 12;
                 }
 
-                SetTriangleQuad(tris, verts - 2, verts - 3, verts - 1, verts - 4);
+                vertices[verts] = new float3(prevPosition.x + prevOffsets.z, 0, prevPosition.z + prevOffsets.w);
+                vertices[verts + 1] = new float3(prevPosition.x + prevOffsets.z, 5, prevPosition.z + prevOffsets.w);
+                vertices[verts + 2] = new float3(prevPosition.x + prevOffsets.x, 5, prevPosition.z + prevOffsets.y);
+                vertices[verts + 3] = new float3(prevPosition.x + prevOffsets.x, 0, prevPosition.z + prevOffsets.y);
+
+                SetQuadUVs(uvs, verts);
+                SetTriangleQuad(tris, verts, verts + 1, verts + 3, verts + 2);
             }
 
             private void SetTriangleQuad(int index, int v0, int v1, int v2, int v3)
@@ -189,48 +216,24 @@ namespace Assets.Scripts.Levels
                 triangles[index + 5] = v1;
             }
 
-            private readonly void CreateOriginVerts(ref NativeArray<float3> vertices)
+            private readonly void SetQuadUVs(NativeArray<float2> targetUvs, int index)
             {
-                Direction direction = directions[0];
-                float x = position.x;
-                float z = position.z;
+                targetUvs[index] = new float2(0f, 0f);
+                targetUvs[index + 1] = new float2(0f, 1f);
+                targetUvs[index + 2] = new float2(1f, 1f);
+                targetUvs[index + 3] = new float2(1f, 0f);
+            }
 
-                float minX = x - thickness, maxX = x + thickness;
-                float minZ = z - thickness, maxZ = z + thickness;
-
-                switch (direction)
+            private readonly float4 GetOriginOffsets(Direction direction, float t)
+            {
+                return direction switch
                 {
-                    case Direction.UP:
-                        vertices[0] = new float3(minX, 0, minZ);
-                        vertices[1] = new float3(minX, 5, minZ);
-                        vertices[2] = new float3(maxX, 5, minZ);
-                        vertices[3] = new float3(maxX, 0, minZ);
-                        break;
-
-                    case Direction.RIGHT:
-                        vertices[0] = new float3(minX, 0, maxZ); 
-                        vertices[1] = new float3(minX, 5, maxZ);
-                        vertices[2] = new float3(minX, 5, minZ); 
-                        vertices[3] = new float3(minX, 0, minZ);
-                        break;
-
-                    case Direction.DOWN:
-                        vertices[0] = new float3(maxX, 0, maxZ); 
-                        vertices[1] = new float3(maxX, 5, maxZ);
-                        vertices[2] = new float3(minX, 5, maxZ); 
-                        vertices[3] = new float3(minX, 0, maxZ);
-                        break;
-
-                    case Direction.LEFT:
-                        vertices[0] = new float3(maxX, 0, minZ); 
-                        vertices[1] = new float3(maxX, 5, minZ);
-                        vertices[2] = new float3(maxX, 5, maxZ); 
-                        vertices[3] = new float3(maxX, 0, maxZ);
-                        break;
-
-                    default:
-                        throw new ArgumentException("Error making origin vertices. Method: [CreateOriginVerts()].");
-                }
+                    Direction.UP => new(-t, -t, t, -t),
+                    Direction.RIGHT => new(-t, t, -t, -t),
+                    Direction.DOWN => new(t, t, -t, t),
+                    Direction.LEFT => new(t, -t, t, t),
+                    _ => new(0f, 0f, 0f, 0f)
+                };
             }
         }
 
@@ -241,16 +244,20 @@ namespace Assets.Scripts.Levels
             Unity.Mathematics.Random prng = new(seed);
 
             int maxWalls = prng.NextInt(wallChainRange.x + 1, wallChainRange.y + 1);
-
             Point point = new(float3.zero, maxWalls, ref prng);
 
-            NativeArray<float3> vertsArr = new(point.directions.Length * 4, Allocator.TempJob);
-            NativeArray<int> trisArr = new(point.directions.Length * 12, Allocator.TempJob);
+            int segmentCount = point.directions.Length - 1;
+            int totalQuads = 1 + (segmentCount * 2) + 1;
+
+            NativeArray<float3> vertsArr = new(totalQuads * 4, Allocator.TempJob);
+            NativeArray<int> trisArr = new(totalQuads * 6, Allocator.TempJob);
+            NativeArray<float2> uvsArr = new(totalQuads * 4, Allocator.TempJob);
 
             SegmentBuilder job = new()
             {
                 vertices = vertsArr,
                 triangles = trisArr,
+                uvs = uvsArr,
                 directions = point.directions,
                 position = float3.zero,
                 thickness = thickness,
@@ -258,19 +265,23 @@ namespace Assets.Scripts.Levels
 
             job.Schedule().Complete();
 
-            Vector3[] vertices = new Vector3[point.directions.Length * 4];
-            int[] triangles = new int[point.directions.Length * 12];
+            Vector3[] vertices = new Vector3[totalQuads * 4];
+            int[] triangles = new int[totalQuads * 6];
+            Vector2[] uvs = new Vector2[totalQuads * 4];
 
             vertsArr.Reinterpret<Vector3>().CopyTo(vertices);
             trisArr.CopyTo(triangles);
+            uvsArr.Reinterpret<Vector2>().CopyTo(uvs);
 
             vertsArr.Dispose();
             trisArr.Dispose();
+            uvsArr.Dispose();
 
             Mesh mesh = new()
             {
                 vertices = vertices,
-                triangles = triangles
+                triangles = triangles,
+                uv = uvs
             };
 
             mesh.RecalculateNormals();
