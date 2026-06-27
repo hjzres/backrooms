@@ -43,6 +43,8 @@ namespace Assets.Scripts.Levels
 
         [SerializeField] private Color gizmoColor;
 
+        private GameObject currentTestWall;
+
         private static readonly float3[] NormalizedDirections = new float3[5] 
         { 
             new(0, 0, 1),  // UP
@@ -133,37 +135,39 @@ namespace Assets.Scripts.Levels
         [BurstCompile]
         private struct SegmentBuilder : IJob
         {
-            [NativeDisableUnsafePtrRestriction] public Point point;
-
             [WriteOnly] public NativeArray<float3> vertices;
 
             [WriteOnly] public NativeArray<int> triangles;
+
+            public NativeArray<Direction> directions;
+
+            public float3 position;
 
             public float thickness;
 
             public void Execute()
             {
-                CreateOriginVerts(point, ref vertices);
+                CreateOriginVerts(ref vertices);
                 SetTriangleQuad(0, 0, 1, 3, 2);
 
                 int verts = 4;
                 int tris = 6;
 
-                for (int i = 0; i <= point.directions.Length - 2; i++)
+                for (int i = 0; i <= directions.Length - 2; i++)
                 {
                     int distance = 5;
 
-                    Direction lastDir = point.directions[i];
-                    Direction nextDir = point.directions[i + 1];
+                    Direction lastDir = directions[i];
+                    Direction nextDir = directions[i + 1];
 
-                    point.position += NormalizedDirections[(int)lastDir] * distance;
+                    position += NormalizedDirections[(int)lastDir] * distance;
 
                     float4 offsets = VertexOffsetTable(lastDir, nextDir, thickness);
 
-                    vertices[verts] = new float3(point.position.x + offsets.x, 0, point.position.z + offsets.y);
-                    vertices[verts + 1] = new float3(point.position.x + offsets.x, 5, point.position.z + offsets.y);
-                    vertices[verts + 2] = new float3(point.position.x + offsets.z, 5, point.position.z + offsets.w);
-                    vertices[verts + 3] = new float3(point.position.x + offsets.z, 0, point.position.z + offsets.w);
+                    vertices[verts] = new float3(position.x + offsets.x, 0, position.z + offsets.y);
+                    vertices[verts + 1] = new float3(position.x + offsets.x, 5, position.z + offsets.y);
+                    vertices[verts + 2] = new float3(position.x + offsets.z, 5, position.z + offsets.w);
+                    vertices[verts + 3] = new float3(position.x + offsets.z, 0, position.z + offsets.w);
 
                     SetTriangleQuad(tris, verts, verts + 1, verts - 4, verts - 3);
                     SetTriangleQuad(tris + 6, verts + 3, verts - 1, verts + 2, verts - 2);
@@ -185,11 +189,11 @@ namespace Assets.Scripts.Levels
                 triangles[index + 5] = v1;
             }
 
-            private readonly void CreateOriginVerts(Point point, ref NativeArray<float3> vertices)
+            private readonly void CreateOriginVerts(ref NativeArray<float3> vertices)
             {
-                Direction direction = point.directions[0];
-                float x = point.position.x;
-                float z = point.position.z;
+                Direction direction = directions[0];
+                float x = position.x;
+                float z = position.z;
 
                 float minX = x - thickness, maxX = x + thickness;
                 float minZ = z - thickness, maxZ = z + thickness;
@@ -247,8 +251,9 @@ namespace Assets.Scripts.Levels
             {
                 vertices = vertsArr,
                 triangles = trisArr,
+                directions = point.directions,
+                position = float3.zero,
                 thickness = thickness,
-                point = point,
             };
 
             job.Schedule().Complete();
@@ -274,6 +279,13 @@ namespace Assets.Scripts.Levels
             GameObject obj = new("Mesh", typeof(MeshFilter), typeof(MeshRenderer));
             obj.GetComponent<MeshFilter>().mesh = mesh;
             obj.GetComponent<MeshRenderer>().material = gray;
+
+            if (currentTestWall != null)
+            {
+                DestroyImmediate(currentTestWall);
+            }
+
+            currentTestWall = obj;
         }
     }
 }
