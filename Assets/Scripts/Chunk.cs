@@ -13,161 +13,84 @@ namespace Assets.Scripts
 
         public Transform transform;
 
+        public int length;
+
         public int resolution;
 
-    //     public GameObject gameObject;
+        public float2 position;
 
-    //     public Transform transform;
+        private readonly Vector3[] vertices, normals;
 
-    //     public int resolution;
+        private readonly int[] triangles;
 
-    //     public int length;
+        private readonly Vector2[] uvs;
 
-    //     public Vector2 position;
+        public Chunk(float2 position, int length, int resolution, Material material, Transform parent = null)
+        {
+            gameObject = new("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+            transform = gameObject.transform;
+            transform.position = new Vector3(position.x, 0, position.y);
 
-    //     public Vector3[] vertices;
+            this.position = position;
+            this.length = length;
+            this.resolution = resolution;
 
-    //     private readonly Vector3[] normals;
+            vertices = new Vector3[(resolution + 1) * (resolution + 1)];
+            triangles = new int[6 * resolution * resolution]; // Derived by the Drei (Big D)
+            normals = new Vector3[(resolution + 1) * (resolution + 1)];
+            uvs = new Vector2[(resolution + 1) * (resolution + 1)];
 
-    //     private readonly Vector2[] uvs;
+            CreateMeshData();
 
-    //     private readonly int[] tris;
+            Mesh mesh = new()
+            {
+                vertices = vertices,
+                triangles = triangles,
+                normals = normals,
+                uv = uvs  
+            };
 
-    //     private readonly Action<Chunk> onCreate;
+            mesh.RecalculateNormals();
+            gameObject.GetComponent<MeshFilter>().mesh = mesh;
+            gameObject.GetComponent<MeshRenderer>().material = material;
+            gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
+            transform.SetParent(parent);
+        }
 
-    //     public Chunk(Vector2 position, int resolution, int length, Material material, Transform parent = null, Action<Chunk> onCreate = null)
-    //     {
-    //         gameObject = new GameObject("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-    //         transform = gameObject.transform;
-    //         transform.position = new Vector3(position.x, 0, position.y);
-    //         this.position = position;
-    //         this.resolution = resolution;
-    //         this.length = length;
-    //         this.onCreate = onCreate;
+        private void CreateMeshData()
+        {
+            float spacing = (float)length / resolution;
+            int verts = 0, tris = 0;
 
-    //         tris = new int[6 * resolution * resolution]; // Derived by the Drei
-    //         resolution++;
+            for (int i = 0; i <= resolution; i++)
+            {
+                for (int j = 0; j <= resolution; j++)
+                {
+                    int index = i * (resolution + 1) + j;
 
-    //         int resSquared = resolution * resolution;
-    //         vertices = new Vector3[resSquared];
-    //         normals = new Vector3[resSquared];
-    //         uvs = new Vector2[resSquared];
+                    vertices[index] = new(i * spacing, 0, j * spacing);
+                    normals[index] = new(0, 0, -1);
+                    uvs[index] = new(vertices[index].x, vertices[index].z);
 
-    //         SendAndReadJobData(resSquared);
+                    if (i != resolution && j != resolution)
+                    {
+                        triangles[tris] = verts + 1;
+                        triangles[tris + 1] = verts + resolution + 2;
+                        triangles[tris + 2] = verts;
+                        triangles[tris + 3] = verts;
+                        triangles[tris + 4] = verts + resolution + 2;
+                        triangles[tris + 5] = verts + resolution + 1;
 
-    //         Mesh mesh = new()
-    //         {
-    //             vertices = vertices,
-    //             normals = normals,
-    //             uv = uvs,
-    //             triangles = tris
-    //         };
+                        tris += 6;
+                        verts++;
+                    }
+                }
 
-    //         mesh.RecalculateNormals();
-
-    //         gameObject.GetComponent<MeshFilter>().mesh = mesh;
-    //         gameObject.GetComponent<MeshRenderer>().material = material;
-    //         gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
-    //         gameObject.isStatic = true;
-    //         transform.SetParent(parent);
-
-    //         onCreate?.Invoke(this);
-    //     }
-
-    //     private void SendAndReadJobData(int arraySize)
-    //     {
-    //         Allocator allocator = Application.isPlaying ? Allocator.TempJob : Allocator.Persistent;
-
-    //         NativeArray<float3> vertsArray = new(arraySize, allocator);
-    //         NativeArray<float3> normalsArray = new(arraySize, allocator);
-    //         NativeArray<float2> uvsArray = new(arraySize, allocator);
-    //         NativeArray<int> trisArray = new(6 * resolution * resolution, allocator);
-
-    //         ChunkBuilderJob job = new()
-    //         {
-    //             _vertices = vertsArray,
-    //             _normals = normalsArray,
-    //             _uvs = uvsArray,
-    //             _triangles = trisArray,
-    //             _resolution = resolution,
-    //             _length = length
-    //         };
-
-    //         JobHandle handle = job.Schedule();
-    //         handle.Complete();
-
-    //         for (int i = 0; i < arraySize; i++)
-    //         {
-    //             vertices[i] = vertsArray[i];
-    //             normals[i] = normalsArray[i];
-    //             uvs[i] = uvsArray[i];
-    //         }
-
-    //         for (int i = 0; i < trisArray.Length; i++)
-    //         {
-    //             tris[i] = trisArray[i];
-    //         }
-
-    //         vertsArray.Dispose();
-    //         normalsArray.Dispose();
-    //         uvsArray.Dispose();
-    //         trisArray.Dispose();
-    //     }
-
-    //     public bool Flag() => false;
-    // }
-
-    // [BurstCompile]
-    // public struct ChunkBuilderJob : IJob
-    // {
-    //     public NativeArray<float3> _vertices;
-
-    //     public NativeArray<float3> _normals;
-
-    //     public NativeArray<float2> _uvs;
-
-    //     public NativeArray<int> _triangles;
-
-    //     public int _resolution;
-
-    //     public int _length;
-
-    //     public void Execute()
-    //     {
-    //         float spacingBetweenVerts = (float)_length / _resolution;
-
-    //         for (int i = 0; i <= _resolution; i++)
-    //         {
-    //             for (int j = 0; j <= _resolution; j++)
-    //             {
-    //                 float2 spacing = new(i * spacingBetweenVerts, j * spacingBetweenVerts);
-
-    //                 _vertices[i * (_resolution + 1) + j] = new float3(spacing.x, 0, spacing.y);
-    //                 _normals[i * (_resolution + 1) + j] = new float3(0, 0, -1);
-    //                 _uvs[0] = new float2((float)i / _resolution, (float)j / _resolution);
-    //             }
-    //         }
-
-    //         int vert = 0;
-    //         int tris = 0;
-
-    //         for (int x = 0; x < _resolution; x++)
-    //         {
-    //             for (int y = 0; y < _resolution; y++)
-    //             {
-    //                 _triangles[tris] = vert + 1;
-    //                 _triangles[tris + 1] = vert + _resolution + 2;
-    //                 _triangles[tris + 2] = vert + 0;
-    //                 _triangles[tris + 3] = vert + 0;
-    //                 _triangles[tris + 4] = vert + _resolution + 2;
-    //                 _triangles[tris + 5] = vert + _resolution + 1;
-
-    //                 tris += 6;
-    //                 vert++;
-    //             }
-
-    //             vert++;
-    //         }
-    //     }
+                if (i != resolution)
+                {
+                    verts++;   
+                }
+            }
+        }
     }
 }

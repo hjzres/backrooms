@@ -2,9 +2,9 @@ using NaughtyAttributes;
 using System;
 using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 
 namespace Assets.Scripts.Levels
@@ -29,7 +29,7 @@ namespace Assets.Scripts.Levels
 
         [SerializeField] [Min(1)] private int segments, chanceThreshold;
 
-        [SerializeField] [MinMaxSlider(1, 10)] private Vector2Int pointSpawnChance;
+        [SerializeField] [MinMaxSlider(0f, 1f)] private Vector2 pointSpawnChance;
 
         [SerializeField] [MinMaxSlider(1, 20)] private Vector2Int wallChainRange;
 
@@ -240,7 +240,7 @@ namespace Assets.Scripts.Levels
             seed = (uint)DateTime.Now.Ticks;
             Unity.Mathematics.Random prng = new(seed);
 
-            int maxWalls = prng.NextInt(3, 8);
+            int maxWalls = prng.NextInt(wallChainRange.x + 1, wallChainRange.y + 1);
 
             Point point = new(float3.zero, maxWalls, ref prng);
 
@@ -286,6 +286,46 @@ namespace Assets.Scripts.Levels
             }
 
             currentTestWall = obj;
+        }
+
+        [Button]
+        public void GenerateMaze()
+        {
+            Chunk chunk = new(float2.zero, 50, 5, gray);
+            //float2 chunkBL = new(chunk.position.x - (0.5f * chunk.length), chunk.position.y - (0.5f * chunk.length));
+            float2 chunkBL = new(chunk.position.x, chunk.position.y);
+
+            seed = (uint)DateTime.Now.Ticks;
+            Unity.Mathematics.Random prng = new(seed);
+
+            float spacing = (float)chunk.length / segments, chance = 0f;
+            NativeList<float2> originPoints = new();
+
+            for (int x = 0; x <= segments; x++)
+            {
+                for (int y = 0; y <= segments; y++)
+                {
+                    if ((x == 0 || x == segments || y == 0 || y == segments) && chance > pointSpawnChance.x)
+                    {
+                        chance -= pointSpawnChance.x;
+                        continue;
+                    }
+
+                    chance += prng.NextFloat(pointSpawnChance.x, pointSpawnChance.y);
+
+                    if (chance >= chanceThreshold)
+                    {
+                        float2 originPosition = new(chunkBL.x + (x * spacing), chunkBL.y + (y * spacing));
+                        originPoints.Add(originPosition);
+
+                        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        cube.transform.position = new Vector3(originPosition.x, 0, originPosition.y);
+                        cube.transform.parent = chunk.transform;
+
+                        chance = 0;
+                    }
+                }
+            }
         }
     }
 }

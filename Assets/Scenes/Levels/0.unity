@@ -303,17 +303,17 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e28d62c373920b64aaff7bb07849cdea, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Lobby
-  seed: 3563580652
-  gray: {fileID: 2100000, guid: cc2c8511faccf034f9e61816861711d1, type: 2}
-  segments: 15
-  chanceThreshold: 50
-  pointSpawnChance: {x: 3, y: 10}
-  wallChainRange: {x: 15, y: 20}
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Levels.Lobby
+  seed: 1061171206
+  gray: {fileID: 2100000, guid: c028f654dafceaa46a5028f6c2b002d2, type: 2}
+  segments: 10
+  chanceThreshold: 4
+  pointSpawnChance: {x: 0.45, y: 0.95}
+  wallChainRange: {x: 3, y: 8}
   thickness: 0.7
   drawGizmos: 0
-  gizmoRadius: 0.25
-  gizmoColor: {r: 1, g: 0, b: 0, a: 1}
+  gizmoRadius: 1
+  gizmoColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &1895053962
 GameObject:
   m_ObjectHideFlags: 0
