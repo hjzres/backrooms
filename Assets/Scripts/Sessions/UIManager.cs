@@ -20,11 +20,11 @@ namespace Sessions
         Button backButton;
 
         bool isJoining;
+        bool isInitialized;
 
-        async void Awake()
+        void Awake()
         {
             ui = GetComponent<UIDocument>().rootVisualElement;
-            await InitializeUnityServices();
         }
 
         void OnEnable()
@@ -40,7 +40,7 @@ namespace Sessions
 
             sessionList = ui.Q<ScrollView>();
 
-            RefreshSessions();
+            InitAndRefresh();
         }
 
         void OnDisable()
@@ -50,8 +50,16 @@ namespace Sessions
             backButton.clicked -= OnBackButtonClicked;
         }
 
+        async void InitAndRefresh()
+        {
+            await InitializeUnityServices();
+            await RefreshSessions();
+        }
+
         async Task InitializeUnityServices()
         {
+            if (isInitialized) return;
+
             try
             {
                 if (UnityServices.State != ServicesInitializationState.Initialized)
@@ -62,6 +70,15 @@ namespace Sessions
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
                     Debug.Log($"Signed in as: {AuthenticationService.Instance.PlayerId}");
                 }
+
+                isInitialized = true;
+            }
+            catch (AuthenticationException)
+            {
+                if (AuthenticationService.Instance.IsSignedIn)
+                    isInitialized = true;
+                else
+                    Debug.LogError("Authentication failed.");
             }
             catch (Exception e)
             {
@@ -69,7 +86,7 @@ namespace Sessions
             }
         }
 
-        async void RefreshSessions()
+        async Task RefreshSessions()
         {
             sessionList.Clear();
 
@@ -83,8 +100,6 @@ namespace Sessions
 
             try
             {
-                await InitializeUnityServices();
-
                 var queryOptions = new QuerySessionsOptions
                 {
                     Count = 20
@@ -177,7 +192,12 @@ namespace Sessions
 
             try
             {
-                await InitializeUnityServices();
+                if (NetworkManager.Singleton == null)
+                {
+                    Debug.LogError("NetworkManager not found. Make sure NetworkBootstrap is in this scene with the prefab assigned.");
+                    isJoining = false;
+                    return;
+                }
 
                 var options = new JoinSessionOptions();
                 ISession session = await MultiplayerService.Instance.JoinSessionByIdAsync(sessionId, options);
@@ -185,7 +205,7 @@ namespace Sessions
                 Debug.Log($"Joined session: {session.Id}");
                 Debug.Log($"Session code: {session.Code}");
 
-                if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
+                if (!NetworkManager.Singleton.IsListening)
                 {
                     NetworkManager.Singleton.StartClient();
                 }

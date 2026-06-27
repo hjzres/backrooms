@@ -12,34 +12,41 @@ namespace Player
         private float _xRotation, _yRotation;
         private PlayerInput _playerInput;
         private InputAction _deltaMouse;
-        void Awake()
+
+        public override void OnNetworkSpawn()
         {
+            if (!IsOwner)
+            {
+                if (cam != null)
+                    cam.gameObject.SetActive(false);
+
+                AudioListener listener = GetComponentInChildren<AudioListener>(true);
+                if (listener != null)
+                    listener.enabled = false;
+
+                enabled = false;
+                return;
+            }
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
             _playerInput = GetComponent<PlayerInput>();
-
+            _playerInput.enabled = true;
             _deltaMouse = _playerInput.actions["Camera"];
-        }
-
-        void Start()
-        {
-            if (!IsOwner)
-            {
-                cam.gameObject.SetActive(false);
-                enabled = false;
-                return;
-            }
-        }
-
-        void OnEnable()
-        {
             _deltaMouse.Enable();
+
+            if (cam != null)
+            {
+                cam.gameObject.SetActive(true);
+                cam.enabled = true;
+            }
         }
 
         void OnDisable()
         {
-            _deltaMouse.Disable();
+            if (_deltaMouse != null)
+                _deltaMouse.Disable();
         }
 
         void Update()

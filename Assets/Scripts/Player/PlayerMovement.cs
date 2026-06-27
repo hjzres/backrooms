@@ -1,16 +1,11 @@
 using Unity.Netcode;
-using Unity.VisualScripting;
-using UnityEditor.Callbacks;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    // Components
     private Rigidbody _rb;
 
-    // Properties
     [Header("Move")]
     [SerializeField] float moveSpeed;
     [SerializeField] float runSpeedMultiplier;
@@ -21,15 +16,11 @@ public class PlayerMovement : NetworkBehaviour
         set
         {
             if (value < 0)
-            {
                 stamina = 0;
-            }
             else if (value > _maxStamina)
-            {
                 stamina = _maxStamina;
-            } else {
+            else
                 stamina = value;
-            }
         }
     }
     private float _maxStamina;
@@ -45,7 +36,6 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] float airMultiplier;
     bool _readyToJump;
 
-    // Input
     private PlayerInput _playerInput;
     private InputAction _moveAction;
     private InputAction _jumpAction;
@@ -56,37 +46,34 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] LayerMask whatIsGround;
     private bool _isGrounded;
 
-    void Awake()
+    public override void OnNetworkSpawn()
     {
-        _maxStamina = 100f;
-        Stamina = _maxStamina;
-        
-        _readyToJump = true;
-
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
+        _maxStamina = 100f;
+        Stamina = _maxStamina;
+        _readyToJump = true;
+
+        if (!IsOwner)
+        {
+            _rb.isKinematic = true;
+            enabled = false;
+            return;
+        }
 
         _playerInput = GetComponent<PlayerInput>();
-
+        _playerInput.enabled = true;
         _moveAction = _playerInput.actions["Movement"];
         _jumpAction = _playerInput.actions["Jump"];
         _runAction = _playerInput.actions["Run"];
-    }
-
-    void OnEnable()
-    {
-        if (!IsOwner) return;
-
         _moveAction.Enable();
         _jumpAction.Enable();
     }
 
     void OnDisable()
     {
-        if (!IsOwner) return;
-
-        _moveAction.Disable();
-        _jumpAction.Disable();
+        if (_moveAction != null) _moveAction.Disable();
+        if (_jumpAction != null) _jumpAction.Disable();
     }
 
     void Update()
