@@ -12,5 +12,20 @@
             <ui:Button text="REFRESH" name="RefreshButton" class="button-small" />
             <ui:Button text="CREATE" name="CreateButton" class="button-small button-accent" />
         </ui:VisualElement>
+        <ui:VisualElement name="PasswordOverlay" style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; display: none;">
+            <ui:VisualElement class="panel" style="width: 420px; align-items: center;">
+                <ui:Label text="ENTER PASSWORD" class="heading-text" />
+                <ui:Label text="" name="PasswordTarget" style="font-size: 13px; color: rgba(200, 180, 120, 0.5); letter-spacing: 3px; margin-bottom: 16px;" />
+                <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 8px;">
+                    <ui:TextField name="PasswordField" password="true" max-length="64" style="width: 250px; margin-right: 8px;" />
+                    <ui:Button text="SHOW" name="PasswordShowButton" class="button-stepper" style="width: 62px; font-size: 12px; letter-spacing: 1px;" />
+                </ui:VisualElement>
+                <ui:Label text="" name="PasswordError" style="font-size: 13px; color: rgb(178, 79, 61); letter-spacing: 2px; margin-bottom: 12px;" />
+                <ui:VisualElement style="flex-direction: row; justify-content: center;">
+                    <ui:Button text="CANCEL" name="PasswordCancelButton" class="button-small" style="margin-right: 12px;" />
+                    <ui:Button text="JOIN" name="PasswordJoinButton" class="button-small button-accent" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
