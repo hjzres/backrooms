@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/stylesheet.uss?fileID=7433441132597879392&amp;guid=6d7a442d01679c34b9dc39dcfc263966&amp;type=3#stylesheet" />
+    <ui:VisualElement picking-mode="Ignore" style="flex-grow: 1; align-items: center;">
+        <ui:VisualElement name="CodePanel" class="panel" picking-mode="Ignore" style="position: absolute; top: 20px; align-items: center; padding-top: 10px; padding-bottom: 12px; padding-left: 36px; padding-right: 36px;">
+            <ui:Label text="SESSION CODE" picking-mode="Ignore" style="font-size: 12px; color: rgba(200, 180, 120, 0.55); letter-spacing: 6px; margin-bottom: 4px;" />
+            <ui:Label name="CodeLabel" text="......" picking-mode="Ignore" style="font-size: 34px; color: rgb(230, 210, 150); -unity-font-style: bold; letter-spacing: 10px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
