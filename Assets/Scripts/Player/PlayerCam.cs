@@ -6,8 +6,16 @@ namespace Player
 {
     public class PlayerCam : NetworkBehaviour
     {
+        public const string SensPrefKey = "MouseSensitivity";
+
         [SerializeField] Camera cam;
         [SerializeField] private float sens = 5f;
+
+        public float Sensitivity
+        {
+            get => sens;
+            set => sens = value;
+        }
 
         [Header("Feel")]
         [SerializeField] float standHeight = 0.497f;
@@ -47,6 +55,7 @@ namespace Player
             _rb = GetComponent<Rigidbody>();
             _camHeight = standHeight;
             _yRotation = transform.eulerAngles.y;
+            sens = PlayerPrefs.GetFloat(SensPrefKey, sens);
 
             _playerInput = GetComponent<PlayerInput>();
             _playerInput.enabled = true;
@@ -72,7 +81,7 @@ namespace Player
             if (_deltaMouse == null || cam == null)
                 return;
 
-            if (!PlayerInventory.LocalUiOpen)
+            if (!LocalUi.AnyOpen)
             {
                 Vector2 mouse = _deltaMouse.ReadValue<Vector2>();
 

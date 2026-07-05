@@ -14,6 +14,7 @@
             <ui:Label text="SHIFT &#183; SPRINT" picking-mode="Ignore" class="hint-text" />
             <ui:Label text="CTRL &#183; CROUCH" picking-mode="Ignore" class="hint-text" />
             <ui:Label text="SPACE &#183; JUMP" picking-mode="Ignore" class="hint-text" />
+            <ui:Label text="ESC &#183; MENU" picking-mode="Ignore" class="hint-text" />
         </ui:VisualElement>
         <ui:VisualElement name="InventoryOverlay" class="inventory-overlay" style="display: none;">
             <ui:VisualElement name="InventoryPanel" class="panel inventory-panel">
@@ -23,6 +24,31 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
                 <ui:Label text="TAB TO CLOSE" class="inventory-hint" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="PauseOverlay" class="pause-overlay" style="display: none;">
+            <ui:VisualElement class="pause-columns">
+                <ui:VisualElement name="PausePanel" class="panel pause-panel">
+                    <ui:Label text="PAUSED" class="pause-title" />
+                    <ui:Button name="ResumeButton" text="RESUME" class="button" />
+                    <ui:Button name="OptionsButton" text="OPTIONS" class="button" />
+                    <ui:Button name="QuitButton" text="QUIT" class="button" />
+                </ui:VisualElement>
+                <ui:VisualElement name="OptionsPanel" class="panel pause-panel" style="display: none;">
+                    <ui:Label text="OPTIONS" class="pause-title" />
+                    <ui:Label text="MOUSE SENSITIVITY" class="option-label" />
+                    <ui:Slider name="SensSlider" low-value="1" high-value="10" />
+                    <ui:Label text="VOLUME" class="option-label" />
+                    <ui:Slider name="VolumeSlider" low-value="0" high-value="1" />
+                    <ui:Button name="OptionsBackButton" text="BACK" class="button" style="margin-top: 18px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="PlayersPanel" class="panel players-panel">
+                    <ui:VisualElement class="players-header">
+                        <ui:Label text="PLAYERS" class="players-title" />
+                        <ui:Label name="PlayersCount" text="-" class="players-count" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="PlayersList" class="players-list" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

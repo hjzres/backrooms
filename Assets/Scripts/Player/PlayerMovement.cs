@@ -105,7 +105,7 @@ public class PlayerMovement : NetworkBehaviour
 
     void ReadInput()
     {
-        if (PlayerInventory.LocalUiOpen)
+        if (LocalUi.AnyOpen)
         {
             _moveDirection = Vector3.zero;
             IsSprinting = false;

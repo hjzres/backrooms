@@ -332,3 +332,113 @@
     letter-spacing: 4px;
     -unity-text-align: middle-center;
 }
+
+/* ── Pause menu ── */
+.pause-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(8, 7, 5, 0.78);
+    align-items: center;
+    justify-content: center;
+}
+
+.pause-columns {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.pause-panel {
+    width: 320px;
+    padding: 28px;
+    margin: 0 10px;
+}
+
+.pause-panel > .button {
+    width: auto;
+    align-self: stretch;
+}
+
+.pause-title {
+    font-size: 26px;
+    color: rgb(200, 180, 120);
+    letter-spacing: 8px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 20px;
+}
+
+.option-label {
+    font-size: 12px;
+    color: rgba(200, 180, 120, 0.55);
+    letter-spacing: 3px;
+    margin-top: 10px;
+    margin-bottom: 2px;
+}
+
+.pause-panel .unity-base-slider__tracker {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(50, 45, 30, 0.9);
+    border-color: rgba(120, 105, 65, 0.4);
+}
+
+.pause-panel .unity-base-slider__dragger {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    border-width: 0;
+    background-color: rgb(200, 180, 120);
+}
+
+.players-panel {
+    width: 260px;
+    padding: 24px;
+    margin: 0 10px;
+}
+
+.players-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.players-title {
+    font-size: 16px;
+    color: rgb(200, 180, 120);
+    letter-spacing: 4px;
+    -unity-font-style: bold;
+}
+
+.players-count {
+    font-size: 14px;
+    color: rgba(200, 180, 120, 0.5);
+    letter-spacing: 2px;
+}
+
+.player-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(40, 36, 25, 0.85);
+    border-width: 1px;
+    border-color: rgba(85, 75, 50, 0.5);
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-bottom: 4px;
+}
+
+.player-name {
+    font-size: 13px;
+    color: rgb(210, 200, 170);
+    letter-spacing: 2px;
+}
+
+.player-you {
+    font-size: 10px;
+    color: rgba(200, 180, 120, 0.6);
+    letter-spacing: 2px;
+}

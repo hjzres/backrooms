@@ -6,14 +6,12 @@ using UnityEngine.InputSystem;
 
 // Local inventory for the owning player. Toggled with Tab; while open the
 // cursor is released and PlayerCam/PlayerMovement suspend look/move input
-// by checking LocalUiOpen.
+// via LocalUi.
 public class PlayerInventory : NetworkBehaviour
 {
     public const int SlotCount = 8;
 
     public static PlayerInventory Local { get; private set; }
-    public static bool LocalUiOpen { get; private set; }
-    public static event Action<bool> UiToggled;
 
     public event Action Changed;
 
@@ -58,7 +56,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (Local == this)
         {
-            SetUiOpen(false);
+            LocalUi.SetInventory(false);
             Local = null;
         }
     }
@@ -72,18 +70,8 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (_inventoryAction == null) return;
 
-        if (_inventoryAction.WasPerformedThisFrame())
-            SetUiOpen(!LocalUiOpen);
-    }
-
-    static void SetUiOpen(bool open)
-    {
-        if (LocalUiOpen == open) return;
-        LocalUiOpen = open;
-
-        Cursor.lockState = open ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = open;
-
-        UiToggled?.Invoke(open);
+        // The pause menu takes priority over the inventory.
+        if (_inventoryAction.WasPerformedThisFrame() && !LocalUi.PauseOpen)
+            LocalUi.SetInventory(!LocalUi.InventoryOpen);
     }
 }
