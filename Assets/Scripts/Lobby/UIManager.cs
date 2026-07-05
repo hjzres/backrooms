@@ -35,7 +35,10 @@ namespace Lobby
 
         void OnStartButtonClicked()
         {
-            Debug.Log("Start");
+            // Single player: the Session scene's AutoStartHost spins up a
+            // local host and the player spawns straight into the elevator.
+            GameSettings.SinglePlayer = true;
+            SceneManager.LoadScene(5);
         }
 
         void OnSessionsButtonClicked()

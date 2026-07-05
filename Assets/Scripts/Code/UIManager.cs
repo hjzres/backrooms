@@ -81,6 +81,7 @@ namespace Code
                 await InitializeUnityServices();
 
                 var options = new JoinSessionOptions();
+                GameSettings.SinglePlayer = false;
                 ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code, options);
 
                 Debug.Log($"Joined session by code: {session.Id}");

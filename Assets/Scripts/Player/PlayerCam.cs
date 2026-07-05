@@ -6,8 +6,6 @@ namespace Player
 {
     public class PlayerCam : NetworkBehaviour
     {
-        public const string SensPrefKey = "MouseSensitivity";
-
         [SerializeField] Camera cam;
         [SerializeField] private float sens = 5f;
 
@@ -55,7 +53,7 @@ namespace Player
             _rb = GetComponent<Rigidbody>();
             _camHeight = standHeight;
             _yRotation = transform.eulerAngles.y;
-            sens = PlayerPrefs.GetFloat(SensPrefKey, sens);
+            sens = PlayerPrefs.GetFloat(GameSettings.SensPrefKey, sens);
 
             _playerInput = GetComponent<PlayerInput>();
             _playerInput.enabled = true;

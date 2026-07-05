@@ -10,5 +10,15 @@
                 <ui:Button text="QUIT" name="QuitButton" class="button" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="OptionsOverlay" class="pause-overlay" style="display: none;">
+            <ui:VisualElement class="panel pause-panel">
+                <ui:Label text="OPTIONS" class="pause-title" />
+                <ui:Label text="MOUSE SENSITIVITY" class="option-label" />
+                <ui:Slider name="SensSlider" low-value="1" high-value="10" />
+                <ui:Label text="VOLUME" class="option-label" />
+                <ui:Slider name="VolumeSlider" low-value="0" high-value="1" />
+                <ui:Button name="OptionsBackButton" text="BACK" class="button" style="margin-top: 18px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -12,7 +12,6 @@ namespace Session
 {
     public class SessionHUD : MonoBehaviour
     {
-        const string VolumePrefKey = "MasterVolume";
         const int MenuSceneIndex = 1;
 
         Label codeLabel;
@@ -76,7 +75,16 @@ namespace Session
             LocalUi.InventoryToggled += OnInventoryToggled;
             LocalUi.PauseToggled += OnPauseToggled;
 
-            AudioListener.volume = PlayerPrefs.GetFloat(VolumePrefKey, 1f);
+            AudioListener.volume = PlayerPrefs.GetFloat(GameSettings.VolumePrefKey, GameSettings.DefaultVolume);
+
+            // Single player has no session code to show.
+            if (GameSettings.SinglePlayer)
+            {
+                var codePanel = root.Q("CodePanel");
+                if (codePanel != null)
+                    codePanel.style.display = DisplayStyle.None;
+                codeResolved = true;
+            }
 
             OnInventoryToggled(LocalUi.InventoryOpen);
             OnPauseToggled(LocalUi.PauseOpen);
@@ -134,8 +142,8 @@ namespace Session
                 RefreshPlayers();
                 nextPlayersPoll = Time.unscaledTime + 0.5f;
 
-                sensSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(Player.PlayerCam.SensPrefKey, 5f));
-                volumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(VolumePrefKey, 1f));
+                sensSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(GameSettings.SensPrefKey, GameSettings.DefaultSens));
+                volumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(GameSettings.VolumePrefKey, GameSettings.DefaultVolume));
             }
         }
 
@@ -163,7 +171,7 @@ namespace Session
 
         void OnSensChanged(ChangeEvent<float> evt)
         {
-            PlayerPrefs.SetFloat(Player.PlayerCam.SensPrefKey, evt.newValue);
+            PlayerPrefs.SetFloat(GameSettings.SensPrefKey, evt.newValue);
 
             var cam = LocalPlayerComponent<Player.PlayerCam>();
             if (cam != null)
@@ -173,7 +181,7 @@ namespace Session
         void OnVolumeChanged(ChangeEvent<float> evt)
         {
             AudioListener.volume = evt.newValue;
-            PlayerPrefs.SetFloat(VolumePrefKey, evt.newValue);
+            PlayerPrefs.SetFloat(GameSettings.VolumePrefKey, evt.newValue);
         }
 
         async void OnQuitClicked()

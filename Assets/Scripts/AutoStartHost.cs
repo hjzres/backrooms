@@ -1,25 +1,30 @@
-using System.Linq;
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 
-public class AutoStartHostDebug : MonoBehaviour
+// Starts a local host when the Session scene is entered without an active
+// network session (single player from the lobby START button, or playing the
+// scene directly in the editor). In multiplayer flows the NetworkManager is
+// already listening, so this does nothing.
+public class AutoStartHost : MonoBehaviour
 {
     void Start()
     {
-        if (NetworkManager.Singleton == null)
+        var nm = NetworkManager.Singleton;
+        if (nm == null)
         {
-            Debug.LogError("No NetworkManager.Singleton found.");
+            Debug.LogError("AutoStartHost: no NetworkManager.Singleton found.");
             return;
         }
 
-        if (!NetworkManager.Singleton.IsListening)
-        {
-            bool started = NetworkManager.Singleton.StartHost();
-            Debug.Log($"StartHost result: {started}");
-        }
+        if (nm.IsListening)
+            return;
 
-        Debug.Log($"IsHost: {NetworkManager.Singleton.IsHost}");
-        Debug.Log($"IsClient: {NetworkManager.Singleton.IsClient}");
-        Debug.Log($"IsServer: {NetworkManager.Singleton.IsServer}");
+        // Reset the transport to direct localhost in case a previous
+        // multiplayer session left relay data on it.
+        if (nm.NetworkConfig.NetworkTransport is UnityTransport transport)
+            transport.SetConnectionData("127.0.0.1", 7777);
+
+        nm.StartHost();
     }
 }

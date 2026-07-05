@@ -209,6 +209,7 @@ namespace Create
                     Password = string.IsNullOrEmpty(password) ? null : password
                 }.WithRelayNetwork();
 
+                GameSettings.SinglePlayer = false;
                 currentSession = await MultiplayerService.Instance.CreateSessionAsync(options);
 
                 Debug.Log($"Session created!");

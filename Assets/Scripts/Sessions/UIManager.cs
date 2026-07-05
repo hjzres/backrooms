@@ -324,6 +324,7 @@ namespace Sessions
                 if (!string.IsNullOrEmpty(password))
                     options.Password = password;
 
+                GameSettings.SinglePlayer = false;
                 ISession session = await MultiplayerService.Instance.JoinSessionByIdAsync(sessionId, options);
 
                 Debug.Log($"Joined session: {session.Id}");
