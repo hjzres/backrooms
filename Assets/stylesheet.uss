@@ -196,3 +196,139 @@
     background-color: rgba(200, 180, 120, 0.35);
     border-radius: 3px;
 }
+
+/* ── In-game HUD ── */
+.crosshair {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    margin-top: -2px;
+    border-radius: 2px;
+    background-color: rgba(230, 210, 150, 0.75);
+}
+
+.stamina-bar {
+    position: absolute;
+    bottom: 42px;
+    left: 50%;
+    margin-left: -140px;
+    width: 280px;
+    height: 6px;
+    background-color: rgba(15, 13, 10, 0.75);
+    border-width: 1px;
+    border-color: rgba(120, 105, 65, 0.5);
+    border-radius: 3px;
+    transition-property: opacity;
+    transition-duration: 0.4s;
+}
+
+.stamina-fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(200, 180, 120);
+    border-radius: 2px;
+}
+
+.hints {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+}
+
+.hint-text {
+    font-size: 12px;
+    color: rgba(200, 180, 120, 0.35);
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+}
+
+/* ── Inventory overlay ── */
+.inventory-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(8, 7, 5, 0.72);
+    align-items: center;
+    justify-content: center;
+}
+
+.inventory-panel {
+    width: 470px;
+    padding: 24px 28px;
+}
+
+.inventory-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 18px;
+}
+
+.inventory-title {
+    font-size: 22px;
+    color: rgb(200, 180, 120);
+    letter-spacing: 6px;
+    -unity-font-style: bold;
+}
+
+.inventory-count {
+    font-size: 14px;
+    color: rgba(200, 180, 120, 0.5);
+    letter-spacing: 2px;
+}
+
+.inventory-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.inv-slot {
+    width: 92px;
+    height: 92px;
+    margin: 4px;
+    background-color: rgba(40, 36, 25, 0.85);
+    border-width: 1px;
+    border-color: rgba(85, 75, 50, 0.5);
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    transition-duration: 0.12s;
+}
+
+.inv-slot:hover {
+    background-color: rgba(55, 49, 33, 0.9);
+    border-color: rgba(200, 180, 120, 0.7);
+}
+
+.inv-slot-filled {
+    border-color: rgba(200, 180, 120, 0.5);
+}
+
+.inv-slot-empty {
+    font-size: 10px;
+    color: rgba(200, 180, 120, 0.18);
+    letter-spacing: 2px;
+}
+
+.inv-slot-item {
+    font-size: 12px;
+    color: rgb(230, 210, 150);
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.inventory-hint {
+    margin-top: 16px;
+    font-size: 11px;
+    color: rgba(200, 180, 120, 0.35);
+    letter-spacing: 4px;
+    -unity-text-align: middle-center;
+}

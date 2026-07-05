@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 642393357400279891}
   - component: {fileID: 8099018225129635674}
   - component: {fileID: 7351962184029446120}
+  - component: {fileID: 4830917251106382745}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -164,19 +165,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 5
-  runSpeedMultiplier: 3
-  stamina: 100
-  staminaIncreaseRate: 0.2
-  staminaDecreaseRate: 0.2
-  staminaCooldown: 2
+  runSpeedMultiplier: 1.6
+  crouchSpeedMultiplier: 0.5
   groundDrag: 5
+  airMultiplier: 0.4
+  maxStamina: 100
+  staminaDecreaseRate: 20
+  staminaIncreaseRate: 15
+  staminaCooldown: 1
   jumpForce: 6
   jumpCooldown: 0.25
-  airMultiplier: 0.2
   playerHeight: 2
   whatIsGround:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 9
 --- !u!114 &642393357400279891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,6 +254,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1b0653202204ce98124d2189ee0ec89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerElevatorSpawn
+--- !u!114 &4830917251106382745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4396972540826041582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02c8a8af997c43c9a5c8c0a0def45cdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
 --- !u!1 &5829515093535903464
 GameObject:
   m_ObjectHideFlags: 0
