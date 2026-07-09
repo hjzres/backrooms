@@ -245,6 +245,120 @@
     margin-bottom: 2px;
 }
 
+/* ── Camcorder overlay ── */
+.cam-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.cam-corner {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    border-color: rgba(225, 225, 225, 0.65);
+}
+
+.cam-corner-tl {
+    top: 36px;
+    left: 48px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+}
+
+.cam-corner-tr {
+    top: 36px;
+    right: 48px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+}
+
+.cam-corner-bl {
+    bottom: 36px;
+    left: 48px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+}
+
+.cam-corner-br {
+    bottom: 36px;
+    right: 48px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+}
+
+.cam-rec-row {
+    position: absolute;
+    top: 46px;
+    left: 70px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.cam-rec-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background-color: rgb(225, 45, 35);
+    margin-right: 9px;
+}
+
+.cam-rec-text {
+    font-size: 20px;
+    color: rgb(235, 235, 235);
+    letter-spacing: 4px;
+    -unity-font-style: bold;
+}
+
+.cam-time {
+    position: absolute;
+    top: 48px;
+    right: 70px;
+    font-size: 18px;
+    color: rgb(235, 235, 235);
+    letter-spacing: 3px;
+    -unity-font-style: bold;
+}
+
+.cam-bottom-row {
+    position: absolute;
+    bottom: 46px;
+    right: 70px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.cam-meta-text {
+    font-size: 13px;
+    color: rgba(235, 235, 235, 0.7);
+    letter-spacing: 2px;
+    margin-right: 14px;
+}
+
+.cam-battery {
+    flex-direction: row;
+    align-items: center;
+    height: 16px;
+    border-width: 1px;
+    border-color: rgba(235, 235, 235, 0.7);
+    border-radius: 2px;
+    padding: 2px 3px;
+}
+
+.cam-battery-bar {
+    width: 6px;
+    height: 8px;
+    background-color: rgba(235, 235, 235, 0.85);
+    margin-right: 2px;
+}
+
+.cam-battery-bar-dim {
+    background-color: rgba(235, 235, 235, 0.2);
+    margin-right: 0;
+}
+
 /* ── Inventory overlay ── */
 .inventory-overlay {
     position: absolute;

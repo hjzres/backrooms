@@ -17,6 +17,12 @@ namespace Session
         Label codeLabel;
         VisualElement staminaBar;
         VisualElement staminaFill;
+        VisualElement crosshair;
+
+        VisualElement camOverlay;
+        VisualElement recDot;
+        Label camTimeLabel;
+        float camTimer;
 
         VisualElement inventoryOverlay;
         VisualElement inventoryGrid;
@@ -48,6 +54,11 @@ namespace Session
             codeLabel = root.Q<Label>("CodeLabel");
             staminaBar = root.Q("StaminaBar");
             staminaFill = root.Q("StaminaFill");
+            crosshair = root.Q("Crosshair");
+
+            camOverlay = root.Q("CamOverlay");
+            recDot = root.Q("RecDot");
+            camTimeLabel = root.Q<Label>("CamTime");
 
             inventoryOverlay = root.Q("InventoryOverlay");
             inventoryGrid = root.Q("InventoryGrid");
@@ -74,6 +85,7 @@ namespace Session
 
             LocalUi.InventoryToggled += OnInventoryToggled;
             LocalUi.PauseToggled += OnPauseToggled;
+            Player.PlayerCam.CamcorderToggled += OnCamcorderToggled;
 
             AudioListener.volume = PlayerPrefs.GetFloat(GameSettings.VolumePrefKey, GameSettings.DefaultVolume);
 
@@ -88,6 +100,7 @@ namespace Session
 
             OnInventoryToggled(LocalUi.InventoryOpen);
             OnPauseToggled(LocalUi.PauseOpen);
+            OnCamcorderToggled(Player.PlayerCam.CamcorderOn);
         }
 
         void OnDisable()
@@ -99,6 +112,7 @@ namespace Session
 
             LocalUi.InventoryToggled -= OnInventoryToggled;
             LocalUi.PauseToggled -= OnPauseToggled;
+            Player.PlayerCam.CamcorderToggled -= OnCamcorderToggled;
             UnsubscribeInventory();
         }
 
@@ -107,6 +121,7 @@ namespace Session
             HandleEscape();
             UpdateCode();
             UpdateStamina();
+            UpdateCamcorder();
 
             if (LocalUi.PauseOpen && Time.unscaledTime >= nextPlayersPoll)
             {
@@ -126,6 +141,35 @@ namespace Session
                 LocalUi.SetInventory(false);
             else
                 LocalUi.SetPause(!LocalUi.PauseOpen);
+        }
+
+        // ── Camcorder ──
+
+        void OnCamcorderToggled(bool on)
+        {
+            if (camOverlay == null) return;
+
+            camOverlay.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+
+            // The viewfinder brackets replace the crosshair.
+            if (crosshair != null)
+                crosshair.style.display = on ? DisplayStyle.None : DisplayStyle.Flex;
+
+            if (on)
+                camTimer = 0f;
+        }
+
+        void UpdateCamcorder()
+        {
+            if (camOverlay == null || camOverlay.style.display == DisplayStyle.None)
+                return;
+
+            camTimer += Time.deltaTime;
+            var t = TimeSpan.FromSeconds(camTimer);
+            camTimeLabel.text = $"{(int)t.TotalHours:00}:{t.Minutes:00}:{t.Seconds:00}";
+
+            // Classic camcorder REC blink.
+            recDot.style.opacity = Time.unscaledTime % 1f < 0.6f ? 1f : 0f;
         }
 
         // ── Pause menu ──

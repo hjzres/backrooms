@@ -14,7 +14,28 @@
             <ui:Label text="SHIFT &#183; SPRINT" picking-mode="Ignore" class="hint-text" />
             <ui:Label text="CTRL &#183; CROUCH" picking-mode="Ignore" class="hint-text" />
             <ui:Label text="SPACE &#183; JUMP" picking-mode="Ignore" class="hint-text" />
+            <ui:Label text="C &#183; CAMERA" picking-mode="Ignore" class="hint-text" />
             <ui:Label text="ESC &#183; MENU" picking-mode="Ignore" class="hint-text" />
+        </ui:VisualElement>
+        <ui:VisualElement name="CamOverlay" picking-mode="Ignore" class="cam-overlay" style="display: none;">
+            <ui:VisualElement picking-mode="Ignore" class="cam-corner cam-corner-tl" />
+            <ui:VisualElement picking-mode="Ignore" class="cam-corner cam-corner-tr" />
+            <ui:VisualElement picking-mode="Ignore" class="cam-corner cam-corner-bl" />
+            <ui:VisualElement picking-mode="Ignore" class="cam-corner cam-corner-br" />
+            <ui:VisualElement picking-mode="Ignore" class="cam-rec-row">
+                <ui:VisualElement name="RecDot" picking-mode="Ignore" class="cam-rec-dot" />
+                <ui:Label text="REC" picking-mode="Ignore" class="cam-rec-text" />
+            </ui:VisualElement>
+            <ui:Label name="CamTime" text="00:00:00" picking-mode="Ignore" class="cam-time" />
+            <ui:VisualElement picking-mode="Ignore" class="cam-bottom-row">
+                <ui:Label text="AWB" picking-mode="Ignore" class="cam-meta-text" />
+                <ui:Label text="SP" picking-mode="Ignore" class="cam-meta-text" />
+                <ui:VisualElement picking-mode="Ignore" class="cam-battery">
+                    <ui:VisualElement picking-mode="Ignore" class="cam-battery-bar" />
+                    <ui:VisualElement picking-mode="Ignore" class="cam-battery-bar" />
+                    <ui:VisualElement picking-mode="Ignore" class="cam-battery-bar cam-battery-bar-dim" />
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="InventoryOverlay" class="inventory-overlay" style="display: none;">
             <ui:VisualElement name="InventoryPanel" class="panel inventory-panel">
