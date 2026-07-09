@@ -5,7 +5,18 @@
             <ui:VisualElement name="Background">
                 <ui:Label text="JOIN BY CODE" class="heading-text" style="margin-bottom: 36px;" />
                 <ui:VisualElement name="CodeJoinContainer" style="align-items: center;">
-                    <ui:IntegerField value="0" focusable="true" style="width: 280px; margin-bottom: 28px;" />
+                    <ui:VisualElement name="CodeEntry" style="margin-bottom: 10px;">
+                        <ui:VisualElement name="CodeSlots" picking-mode="Ignore" style="flex-direction: row;">
+                            <ui:Label name="Slot0" class="code-slot" />
+                            <ui:Label name="Slot1" class="code-slot" />
+                            <ui:Label name="Slot2" class="code-slot" />
+                            <ui:Label name="Slot3" class="code-slot" />
+                            <ui:Label name="Slot4" class="code-slot" />
+                            <ui:Label name="Slot5" class="code-slot" />
+                        </ui:VisualElement>
+                        <ui:TextField name="CodeField" max-length="6" focusable="true" class="code-hidden-field" />
+                    </ui:VisualElement>
+                    <ui:Label text="ENTER 6-CHARACTER CODE" class="code-hint" />
                     <ui:Button text="JOIN" name="JoinButton" class="button button-accent" style="width: 200px;" />
                 </ui:VisualElement>
             </ui:VisualElement>

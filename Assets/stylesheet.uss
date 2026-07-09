@@ -161,6 +161,44 @@
     -unity-background-image-tint-color: rgb(200, 180, 120);
 }
 
+/* ── Code entry slots ── */
+.code-slot {
+    width: 52px;
+    height: 66px;
+    margin: 0 5px;
+    background-color: rgba(40, 36, 25, 0.9);
+    border-width: 1px;
+    border-color: rgba(120, 105, 65, 0.4);
+    border-radius: 4px;
+    font-size: 34px;
+    color: rgb(230, 210, 150);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-duration: 0.12s;
+}
+
+.code-slot-active {
+    border-color: rgb(200, 180, 120);
+    background-color: rgba(55, 49, 33, 0.95);
+}
+
+.code-hint {
+    font-size: 11px;
+    color: rgba(200, 180, 120, 0.4);
+    letter-spacing: 4px;
+    margin-bottom: 24px;
+}
+
+.code-hidden-field {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    margin: 0;
+}
+
 /* ── Input field styling ── */
 .unity-text-field__input,
 .unity-integer-field__input {
