@@ -9,14 +9,6 @@
         <ui:VisualElement name="StaminaBar" picking-mode="Ignore" class="stamina-bar">
             <ui:VisualElement name="StaminaFill" picking-mode="Ignore" class="stamina-fill" />
         </ui:VisualElement>
-        <ui:VisualElement name="Hints" picking-mode="Ignore" class="hints">
-            <ui:Label text="TAB &#183; INVENTORY" picking-mode="Ignore" class="hint-text" />
-            <ui:Label text="SHIFT &#183; SPRINT" picking-mode="Ignore" class="hint-text" />
-            <ui:Label text="CTRL &#183; CROUCH" picking-mode="Ignore" class="hint-text" />
-            <ui:Label text="SPACE &#183; JUMP" picking-mode="Ignore" class="hint-text" />
-            <ui:Label text="C &#183; CAMERA" picking-mode="Ignore" class="hint-text" />
-            <ui:Label text="ESC &#183; MENU" picking-mode="Ignore" class="hint-text" />
-        </ui:VisualElement>
         <ui:VisualElement name="CamOverlay" picking-mode="Ignore" class="cam-overlay" style="display: none;">
             <ui:VisualElement picking-mode="Ignore" class="cam-corner cam-corner-tl" />
             <ui:VisualElement picking-mode="Ignore" class="cam-corner cam-corner-tr" />
@@ -44,9 +36,10 @@
                     <ui:Label name="InventoryCount" text="0/8" class="inventory-count" />
                 </ui:VisualElement>
                 <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
-                <ui:Label text="TAB TO CLOSE" class="inventory-hint" />
+                <ui:Label text="DRAG TO THE HOTBAR OR PRESS 1 - 4 &#183; TAB TO CLOSE" class="inventory-hint" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="Hotbar" picking-mode="Ignore" class="hotbar" />
         <ui:VisualElement name="PauseOverlay" class="pause-overlay" style="display: none;">
             <ui:VisualElement class="pause-columns">
                 <ui:VisualElement name="PausePanel" class="panel pause-panel">
@@ -71,6 +64,9 @@
                     <ui:VisualElement name="PlayersList" class="players-list" />
                 </ui:VisualElement>
             </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="DragGhost" picking-mode="Ignore" class="drag-ghost" style="display: none;">
+            <ui:Label name="DragGhostLabel" picking-mode="Ignore" class="inv-slot-item" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
