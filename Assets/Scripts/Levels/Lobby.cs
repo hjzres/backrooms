@@ -22,9 +22,19 @@ namespace Assets.Scripts.Levels
 
         [SerializeField] [Min(1)] private uint seed;
 
-        [Header("Generation Settings")]
+        [Header("Level Materials")]
 
         [SerializeField] private Material gray;
+
+        [SerializeField] private Material arrowWallpaper;
+
+        [SerializeField] private Material carpet;
+
+        [Header("Generation Parameters")]
+
+        [SerializeField] [Min(0.1f)] private float vertexOffset = 1f;
+
+        [SerializeField] [Min(1)] private int wallLength = 5;
 
         [SerializeField] [Min(1)] private int segments, chanceThreshold;
 
@@ -32,152 +42,111 @@ namespace Assets.Scripts.Levels
 
         [SerializeField] [MinMaxSlider(1, 20)] private Vector2Int wallChainRange;
 
-        [SerializeField] [Min(0.1f)] private float width = 1f;
-
-        [Header("Gizmo Settings")]
-
-        [SerializeField] private bool drawGizmos;
-
-        [SerializeField] [Min(0.1f)] private float gizmoRadius;
-
-        [SerializeField] private Color gizmoColor;
-
-        private GameObject currentTestWall;
-
-        private static readonly float3[] NormalizedDirections = new float3[5] 
+        private static readonly float2[] NormalizedDirections = new float2[5] 
         { 
-            new(0, 0, 1),  // UP
-            new(1, 0, 0),  // RIGHT
-            new(0, 0, -1), // DOWN
-            new(-1, 0, 0), // LEFT
-            float3.zero   // NONE
+            new(0, 1),  // UP
+            new(1, 0),  // RIGHT
+            new(0, -1), // DOWN
+            new(-1, 0), // LEFT
+            float2.zero   // NONE
         };
 
         // Vertices are created in a clockwise direction starting with the bottom left and ending with the bottom right.
         // Offset values follow the order aforementioned. x is bottom left, y is top left, z is top right, w is bottom right.
-        private static float4 VertexOffsetTable(Direction lastDirection, Direction nextDirection, float width)
+        private static float4 VertexOffsetTable(Direction lastDirection, Direction nextDirection, float vertexOffset)
         {
             return (lastDirection, nextDirection) switch
             {
-                (Direction.UP, Direction.UP) => new(-width, 0f, width, 0f),
-                (Direction.UP, Direction.RIGHT) => new(-width, width, width, -width),
-                (Direction.UP, Direction.LEFT) => new(-width, -width, width, width),
-                (Direction.UP, Direction.NONE) => new(-width, 0f, width, 0f),
+                (Direction.UP, Direction.UP) => new(-vertexOffset, 0f, vertexOffset, 0f),
+                (Direction.UP, Direction.RIGHT) => new(-vertexOffset, vertexOffset, vertexOffset, -vertexOffset),
+                (Direction.UP, Direction.LEFT) => new(-vertexOffset, -vertexOffset, vertexOffset, vertexOffset),
+                (Direction.UP, Direction.NONE) => new(-vertexOffset, 0f, vertexOffset, 0f),
 
-                (Direction.RIGHT, Direction.UP) => new(-width, width, width, -width),
-                (Direction.RIGHT, Direction.RIGHT) => new(0f, width, 0f, -width),
-                (Direction.RIGHT, Direction.DOWN) => new(width, width, -width, -width),
-                (Direction.RIGHT, Direction.NONE) => new(0f, width, 0f, -width),
+                (Direction.RIGHT, Direction.UP) => new(-vertexOffset, vertexOffset, vertexOffset, -vertexOffset),
+                (Direction.RIGHT, Direction.RIGHT) => new(0f, vertexOffset, 0f, -vertexOffset),
+                (Direction.RIGHT, Direction.DOWN) => new(vertexOffset, vertexOffset, -vertexOffset, -vertexOffset),
+                (Direction.RIGHT, Direction.NONE) => new(0f, vertexOffset, 0f, -vertexOffset),
 
-                (Direction.DOWN, Direction.RIGHT) => new(width, width, -width, -width),
-                (Direction.DOWN, Direction.DOWN) => new(width, 0f, -width, 0f),
-                (Direction.DOWN, Direction.LEFT) => new(width, -width, -width, width),
-                (Direction.DOWN, Direction.NONE) => new(width, 0f, -width, 0f),
+                (Direction.DOWN, Direction.RIGHT) => new(vertexOffset, vertexOffset, -vertexOffset, -vertexOffset),
+                (Direction.DOWN, Direction.DOWN) => new(vertexOffset, 0f, -vertexOffset, 0f),
+                (Direction.DOWN, Direction.LEFT) => new(vertexOffset, -vertexOffset, -vertexOffset, vertexOffset),
+                (Direction.DOWN, Direction.NONE) => new(vertexOffset, 0f, -vertexOffset, 0f),
 
-                (Direction.LEFT, Direction.UP) => new(-width, -width, width, width),
-                (Direction.LEFT, Direction.DOWN) => new(width, -width, -width, width),
-                (Direction.LEFT, Direction.LEFT) => new(0f, -width, 0f, width),
-                (Direction.LEFT, Direction.NONE) => new(0f, -width, 0f, width),
+                (Direction.LEFT, Direction.UP) => new(-vertexOffset, -vertexOffset, vertexOffset, vertexOffset),
+                (Direction.LEFT, Direction.DOWN) => new(vertexOffset, -vertexOffset, -vertexOffset, vertexOffset),
+                (Direction.LEFT, Direction.LEFT) => new(0f, -vertexOffset, 0f, vertexOffset),
+                (Direction.LEFT, Direction.NONE) => new(0f, -vertexOffset, 0f, vertexOffset),
 
-                (Direction.NONE, Direction.NONE) => float4.zero,
-
-                _ => throw new ArgumentException("Error looking up vertex offset. Method: [VertexOffsetLookup()].")
+                _ => float4.zero
             };
         }
 
-        [BurstCompile]
-        private struct SegmentBuilder : IJob
+        private struct Point
         {
+            public float2 position;
+
+            public int dirStartIndex;
+
+            public int dirEndIndex;
+        }
+
+        [BurstCompile]
+        private struct MazeBuilder : IJob
+        {
+            [Unity.Collections.ReadOnly] public NativeArray<Point> points;
+
+            [Unity.Collections.ReadOnly] public NativeArray<Direction> directions;
+
             [WriteOnly] public NativeArray<float3> vertices;
+
+            [WriteOnly] public NativeArray<int> triangles; 
 
             [WriteOnly] public NativeArray<float2> uvs;
 
-            [WriteOnly] public NativeArray<int> triangles;
+            [Unity.Collections.ReadOnly] public float vertexOffset;
 
-            public float3 position;
-
-            public float width;
-
-            public Unity.Mathematics.Random prng;
-
-            public int maxWalls;
-
-            struct Point
-            {
-                public float3 position;
-
-                public NativeArray<Direction> directions;
-
-                public Point(float3 position, int maxDirections, ref Unity.Mathematics.Random prng)
-                {
-                    this.position = position;
-                    directions = new(maxDirections + 1, Allocator.Temp);
-
-                    Direction lastDir = Direction.NONE;
-
-                    for (int i = 0; i < maxDirections; i++)
-                    {
-                        directions[i] = RandomizeDirection(lastDir, ref prng);
-                        lastDir = directions[i];
-                    }
-
-                    directions[maxDirections] = Direction.NONE;
-                }
-
-                private static Direction RandomizeDirection(Direction lastDirection, ref Unity.Mathematics.Random prng)
-                {
-                    int num = prng.NextInt(0, 4);
-
-                    return num switch
-                    {
-                        0 => lastDirection == Direction.DOWN ? Direction.DOWN : Direction.UP,
-                        1 => lastDirection == Direction.LEFT ? Direction.LEFT : Direction.RIGHT,
-                        2 => lastDirection == Direction.UP ? Direction.UP : Direction.DOWN,
-                        3 => lastDirection == Direction.RIGHT ? Direction.RIGHT : Direction.LEFT,
-
-                        _ => throw new ArgumentException("An error occured choosing a random direction for the next wall."),
-                    };
-                }
-            }
+            [Unity.Collections.ReadOnly] public float wallLength;
 
             public void Execute()
             {
-                Point point = new(float3.zero, maxWalls, ref prng);
+                int verts = 0;
+                int tris = 0;
 
-                CreateOriginVerts(point.directions[0], position.x, position.z, ref vertices);
-                SetTriangleQuad(0, 0, 1, 3, 2);
-
-                int verts = 4;
-                int tris = 6;
-
-                for (int i = 0; i <= point.directions.Length - 2; i++)
+                for (int i = 0; i < points.Length; i++)
                 {
-                    int distance = 5;
+                    Point point = points[i];
 
-                    Direction lastDir = point.directions[i];
-                    Direction nextDir = point.directions[i + 1];
-
-                    position += NormalizedDirections[(int)lastDir] * distance;
-
-                    float4 offsets = VertexOffsetTable(lastDir, nextDir, width);
-
-                    vertices[verts] = new float3(position.x + offsets.x, 0, position.z + offsets.y);
-                    vertices[verts + 1] = new float3(position.x + offsets.x, 5, position.z + offsets.y);
-                    vertices[verts + 2] = new float3(position.x + offsets.z, 5, position.z + offsets.w);
-                    vertices[verts + 3] = new float3(position.x + offsets.z, 0, position.z + offsets.w);
-
-                    SetTriangleQuad(tris, verts, verts + 1, verts - 4, verts - 3);
-                    SetTriangleQuad(tris + 6, verts + 3, verts - 1, verts + 2, verts - 2);
+                    CreateOriginVerts(directions[point.dirStartIndex], point.position.x, point.position.y, verts, ref vertices);
+                    SetQuadUVs(verts, ref uvs);
+                    SetTriangleQuad(tris, verts, verts + 1, verts + 3, verts + 2);
 
                     verts += 4;
-                    tris += 12;
-                }
+                    tris += 6;
 
-                SetTriangleQuad(tris, verts - 2, verts - 3, verts - 1, verts - 4);
+                    for (int j = point.dirStartIndex; j < point.dirEndIndex - 1; j++)
+                    {
+                        Direction lastDir = directions[j];
+                        Direction nextDir = directions[j + 1];
 
-                if (point.directions.IsCreated)
-                {
-                    point.directions.Dispose();
+                        point.position += NormalizedDirections[(int)lastDir] * wallLength;
+
+                        float4 offsets = VertexOffsetTable(lastDir, nextDir, vertexOffset);
+
+                        vertices[verts] = new float3(point.position.x + offsets.x, 0, point.position.y + offsets.y);
+                        vertices[verts + 1] = new float3(point.position.x + offsets.x, 5, point.position.y + offsets.y);
+                        vertices[verts + 2] = new float3(point.position.x + offsets.z, 5, point.position.y + offsets.w);
+                        vertices[verts + 3] = new float3(point.position.x + offsets.z, 0, point.position.y + offsets.w);
+
+                        SetQuadUVs(verts, ref uvs);
+                        SetTriangleQuad(tris, verts, verts + 1, verts - 4, verts - 3);
+                        SetTriangleQuad(tris + 6, verts + 3, verts - 1, verts + 2, verts - 2);
+
+                        verts += 4;
+                        tris += 12;
+                    }
+
+                    SetTriangleQuad(tris, verts - 2, verts - 3, verts - 1, verts - 4);
+                    tris += 6;
                 }
             }
 
@@ -191,138 +160,236 @@ namespace Assets.Scripts.Levels
                 triangles[index + 5] = v1;
             }
 
-            private readonly void CreateOriginVerts(Direction initialDir, float x, float z, ref NativeArray<float3> vertices)
+            private void SetQuadUVs(int index, ref NativeArray<float2> uvs)
             {
-                switch (initialDir)
+                uvs[index] = new float2(0f, 0f);
+                uvs[index + 1] = new float2(0f, 1f);
+                uvs[index + 2] = new float2(1f, 1f);
+                uvs[index + 3] = new float2(1f, 0f);
+            }
+
+            // Used Gemini to make the method cleaner than the eyesore it was before, will make something myself sometime when I optimize.
+            private readonly void CreateOriginVerts(Direction initialDir, float x, float z, int index, ref NativeArray<float3> vertices)
+            {
+                if (initialDir == Direction.NONE) return;
+
+                // Lookup vectors that specify local (X, Z) offsets relative to direction orientation
+                // Columns: [0] Bottom-Left, [1] Top-Left, [2] Top-Right, [3] Bottom-Right
+                ReadOnlySpan<float2> cornerOffsets = (initialDir) switch
                 {
-                    case Direction.UP:
-                        vertices[0] = math.float3(x - width, 0, z - width);
-                        vertices[1] = math.float3(x - width, 5, z - width);
-                        vertices[2] = math.float3(x + width, 5, z - width);
-                        vertices[3] = math.float3(x + width, 0, z - width);
-                        break;
+                    Direction.UP    => stackalloc float2[4] { new(-1, -1), new(-1, -1), new(1, -1),  new(1, -1) },
+                    Direction.RIGHT => stackalloc float2[4] { new(-1, 1),  new(-1, 1),  new(-1, -1), new(-1, -1) },
+                    Direction.DOWN  => stackalloc float2[4] { new(1, 1),   new(1, 1),   new(-1, 1),  new(-1, 1) },
+                    Direction.LEFT  => stackalloc float2[4] { new(1, -1),  new(1, -1),  new(1, 1),   new(1, 1) },
 
-                    case Direction.RIGHT:
-                        vertices[0] = math.float3(x - width, 0, z + width);
-                        vertices[1] = math.float3(x - width, 5, z + width);
-                        vertices[2] = math.float3(x - width, 5, z - width);
-                        vertices[3] = math.float3(x - width, 0, z - width);
-                        break;
+                    _ => stackalloc float2[4] { float2.zero, float2.zero, float2.zero, float2.zero }
+                };
 
-                    case Direction.DOWN:
-                        vertices[0] = math.float3(x + width, 0, z + width);
-                        vertices[1] = math.float3(x + width, 5, z + width);
-                        vertices[2] = math.float3(x - width, 5, z + width);
-                        vertices[3] = math.float3(x - width, 0, z + width);
-                        break;
-
-                    case Direction.LEFT:
-                        vertices[0] = math.float3(x + width, 0, z - width);
-                        vertices[1] = math.float3(x + width, 5, z - width);
-                        vertices[2] = math.float3(x + width, 5, z + width);
-                        vertices[3] = math.float3(x + width, 0, z + width);
-                        break;
-                }
+                // Assign the 4 vertices using heights 0, 5, 5, 0 (matching your original vertical arrangement)
+                vertices[index] = math.float3(x + cornerOffsets[0].x * vertexOffset, 0, z + cornerOffsets[0].y * vertexOffset);
+                vertices[index + 1] = math.float3(x + cornerOffsets[1].x * vertexOffset, 5, z + cornerOffsets[1].y * vertexOffset);
+                vertices[index + 2] = math.float3(x + cornerOffsets[2].x * vertexOffset, 5, z + cornerOffsets[2].y * vertexOffset);
+                vertices[index + 3] = math.float3(x + cornerOffsets[3].x * vertexOffset, 0, z + cornerOffsets[3].y * vertexOffset);
             }
         }
 
         [Button]
-        public void GenerateSimpleSegment() 
+        public void GenerateMaze()
         {
             seed = (uint)DateTime.Now.Ticks;
             Unity.Mathematics.Random prng = new(seed);
 
-            int maxWalls = prng.NextInt(wallChainRange.x + 1, wallChainRange.y + 1);
+            Chunk chunk = new(float2.zero, 50, 1, gray);
+            NativeList<Point> points = new(0, Allocator.TempJob);
+            NativeList<Direction> directions = new(0, Allocator.TempJob);
 
-            NativeArray<float3> vertsArr = new((maxWalls + 1) * 4, Allocator.TempJob);
-            NativeArray<float2> uvsArr = new((maxWalls + 1) * 4, Allocator.TempJob);
-            NativeArray<int> trisArr = new((maxWalls + 1) * 12, Allocator.TempJob);
+            DetermineStartCoordinates(chunk, ref points, ref prng);
+            AssignDirections(ref points, ref directions, ref prng);
+            CalculateMeshCounts(points, directions, out int verticeLength, out int triangleLength);
 
-            SegmentBuilder job = new()
+            NativeArray<float3> vertsArr = new(verticeLength, Allocator.TempJob);
+            NativeArray<int> trisArr = new(triangleLength, Allocator.TempJob);
+            NativeArray<float2> uvsArr = new(verticeLength, Allocator.TempJob);
+
+            MazeBuilder job = new()
             {
+                points = points,
+                directions = directions,
                 vertices = vertsArr,
-                uvs = uvsArr,
                 triangles = trisArr,
-                position = float3.zero,
-                width = width,
-                prng = prng,
-                maxWalls = maxWalls,
+                uvs = uvsArr,
+                vertexOffset = vertexOffset,
+                wallLength = wallLength
             };
 
             job.Schedule().Complete();
 
-            Vector3[] vertices = new Vector3[(maxWalls + 1) * 4];
-            Vector2[] uvs = new Vector2[(maxWalls + 1)  * 4];
-            int[] triangles = new int[(maxWalls + 1) * 12];
+            Vector3[] vertices = new Vector3[verticeLength];
+            int[] triangles = new int[triangleLength];
+            Vector2[] uvs = new Vector2[verticeLength];
 
             vertsArr.Reinterpret<Vector3>().CopyTo(vertices);
-            uvsArr.Reinterpret<Vector2>().CopyTo(uvs);
             trisArr.CopyTo(triangles);
+            uvsArr.Reinterpret<Vector2>().CopyTo(uvs);
 
+            points.Dispose();
+            directions.Dispose();
             vertsArr.Dispose();
-            uvsArr.Dispose();
             trisArr.Dispose();
+            uvsArr.Dispose();
 
-            Mesh mesh = new()
-            {
-                vertices = vertices,
-                uv = uvs,
-                triangles = triangles
-            };
+            Mesh mesh = new() { vertices = vertices, triangles = triangles, uv = uvs };
 
-            mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
+            HandleShading(mesh);
 
-            GameObject obj = new("Mesh", typeof(MeshFilter), typeof(MeshRenderer));
-            obj.GetComponent<MeshFilter>().mesh = mesh;
-            obj.GetComponent<MeshRenderer>().material = gray;
-
-            if (currentTestWall != null)
-            {
-                DestroyImmediate(currentTestWall);
-            }
-
-            currentTestWall = obj;
+            GameObject mazeObj = new("Maze", typeof(MeshFilter), typeof(MeshRenderer));
+            mazeObj.GetComponent<MeshFilter>().mesh = mesh;
+            mazeObj.GetComponent<MeshRenderer>().material = arrowWallpaper; 
+            mazeObj.transform.parent = chunk.transform;
         }
 
-        //[Button]
-        //public void GenerateMaze()
-        //{
-        //    Chunk chunk = new(float2.zero, 50, 5, gray);
-        //    //float2 chunkBL = new(chunk.position.x - (0.5f * chunk.length), chunk.position.y - (0.5f * chunk.length));
-        //    float2 chunkBL = new(chunk.position.x, chunk.position.y);
+        private void DetermineStartCoordinates(Chunk chunk, ref NativeList<Point> points, ref Unity.Mathematics.Random prng)
+        {
+            float spacing = (float)chunk.length / segments;
+            float chance = 0f;
 
-        //    seed = (uint)DateTime.Now.Ticks;
-        //    Unity.Mathematics.Random prng = new(seed);
+            for (int x = 0; x <= segments; x++)
+            {
+                for (int z = 0; z <= segments; z++)
+                {
+                    if (chance > pointSpawnChance.x && (x == 0 || x == segments || z == 0 || z == segments))
+                    {
+                        chance -= pointSpawnChance.x;
+                        continue;
+                    }
 
-        //    float spacing = (float)chunk.length / segments, chance = 0f;
-        //    NativeList<float2> originPoints = new();
+                    chance += prng.NextFloat(pointSpawnChance.x, pointSpawnChance.y);
 
-        //    for (int x = 0; x <= segments; x++)
-        //    {
-        //        for (int y = 0; y <= segments; y++)
-        //        {
-        //            if ((x == 0 || x == segments || y == 0 || y == segments) && chance > pointSpawnChance.x)
-        //            {
-        //                chance -= pointSpawnChance.x;
-        //                continue;
-        //            }
+                    if (chance >= chanceThreshold)
+                    {
+                        float2 coord = new(chunk.transform.position.x + x * spacing, chunk.transform.position.z + z * spacing);
+                        Point point = new();
+                        point.position = coord;
 
-        //            chance += prng.NextFloat(pointSpawnChance.x, pointSpawnChance.y);
+                        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        visual.transform.position = new float3(coord.x, 0, coord.y);
+                        visual.transform.parent = chunk.transform; 
+                        points.Add(point);
 
-        //            if (chance >= chanceThreshold)
-        //            {
-        //                float2 originPosition = new(chunkBL.x + (x * spacing), chunkBL.y + (y * spacing));
-        //                originPoints.Add(originPosition);
+                        chance = 0f;
+                    }
+                }
+            }
+        }
 
-        //                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        //                cube.transform.position = new Vector3(originPosition.x, 0, originPosition.y);
-        //                cube.transform.parent = chunk.transform;
+        // Assigns all directions to one array that is split using dirStartIndex and dirEndIndex from the Point struct.
+        // Every set of directions for the points ends with Direction.NONE
+        private void AssignDirections(ref NativeList<Point> points, ref NativeList<Direction> directions, ref Unity.Mathematics.Random prng)
+        {
+            int startIndex = 0;
 
-        //                chance = 0;
-        //            }
-        //        }
-        //    }
-        //}
+            for (int i = 0; i < points.Length; i++)
+            {
+                Point point = points[i];
+                Direction lastDir = Direction.NONE;
+                int amount = prng.NextInt(wallChainRange.x, wallChainRange.y);
+
+                for (int j = 0; j <= amount; j++)
+                {
+                    Direction nextDir = RandomizeDirection(lastDir, ref prng);
+                    directions.Add(nextDir);
+                    lastDir = nextDir;
+                }
+
+                directions.Add(Direction.NONE);
+
+                point.dirStartIndex = startIndex;
+                point.dirEndIndex = directions.Length;
+                startIndex = directions.Length;
+                points[i] = point;
+            }
+        }
+
+        private static Direction RandomizeDirection(Direction lastDirection, ref Unity.Mathematics.Random prng)
+        {
+            int num = prng.NextInt(0, 4);
+
+            return num switch
+            {
+                0 => lastDirection == Direction.DOWN ? Direction.DOWN : Direction.UP,
+                1 => lastDirection == Direction.LEFT ? Direction.LEFT : Direction.RIGHT,
+                2 => lastDirection == Direction.UP ? Direction.UP : Direction.DOWN,
+                3 => lastDirection == Direction.RIGHT ? Direction.RIGHT : Direction.LEFT,
+
+                _ => throw new ArgumentException("An error occured choosing a random direction for the next wall."),
+            };
+        }
+
+        // Gemini assisted with this yet again because it was impossible to just simply calculate the counts,
+        // I will come back in the future and optimize things. This will do for now.
+        private static void CalculateMeshCounts(NativeList<Point> points, NativeList<Direction> directions, out int vertCount, out int triCount)
+        {
+            vertCount = 0;
+            triCount = 0;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Point point = points[i];
+
+                // Origin Quad
+                vertCount += 4;
+                triCount += 6;
+
+                // Loop for segments in the wall chain
+                int segmentsInChain = point.dirEndIndex - 1 - point.dirStartIndex;
+
+                if (segmentsInChain > 0)
+                {
+                    vertCount += segmentsInChain * 4;
+                    triCount += segmentsInChain * 12;
+                }
+
+                // End Quad
+                triCount += 6;
+            }
+        }
+
+        // This function was done by Gemini, lighting is a field I really
+        // struggle in right now and it drove me nuts...
+        private void HandleShading(Mesh mesh)
+        {
+            // 1. Split shared vertices to enforce hard edges
+            Vector3[] splitVerts;
+            Vector2[] splitUVs;
+            int[] splitTris;
+            SplitMeshVertices(mesh, out splitVerts, out splitUVs, out splitTris);
+
+            mesh.Clear();
+            mesh.vertices = splitVerts;
+            mesh.uv = splitUVs;
+            mesh.triangles = splitTris;
+
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+        }
+
+        private static void SplitMeshVertices(Mesh mesh, out Vector3[] newVerts, out Vector2[] newUVs, out int[] newTris)
+        {
+            Vector3[] oldVerts = mesh.vertices;
+            Vector2[] oldUVs = mesh.uv;
+            int[] oldTris = mesh.triangles;
+
+            newVerts = new Vector3[oldTris.Length];
+            newUVs = new Vector2[oldTris.Length];
+            newTris = new int[oldTris.Length];
+
+            for (int i = 0; i < oldTris.Length; i++)
+            {
+                int index = oldTris[i];
+                newVerts[i] = oldVerts[index];
+                newUVs[i] = oldUVs[index];
+                newTris[i] = i;
+            }
+        }
     }
 }

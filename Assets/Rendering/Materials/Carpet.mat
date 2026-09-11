@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Arrow_wallpaper
+  m_Name: Carpet
   m_Shader: {fileID: -6465566751694194690, guid: 3a389afe83044424ab70fd05c9b1d44f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -26,15 +26,15 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _Ambient_Occlusion_Map:
-        m_Texture: {fileID: 2800000, guid: 34ae18e2c717a8d4893cb6cc6ec54b65, type: 3}
+        m_Texture: {fileID: 2800000, guid: d7836439a04f0bb4a8af5d80763c030d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: dff4c72287011d94289ee1a2570ac8e7, type: 3}
-        m_Scale: {x: 4.37, y: 6.24}
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Base_Map:
-        m_Texture: {fileID: 2800000, guid: dff4c72287011d94289ee1a2570ac8e7, type: 3}
+        m_Texture: {fileID: 2800000, guid: 96961a8b1f21197488d9dbfd29a09410, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -43,7 +43,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 5.09, y: 1.54}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailMask:
         m_Texture: {fileID: 0}
@@ -66,23 +66,19 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _HeightMap:
-        m_Texture: {fileID: 2800000, guid: 94730c69af11e4a4eb7ea4a0e7f533d8, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _Height_Map:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: edc822017fa1f0147a3a6fcc7e50fa37, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Height_Texture:
-        m_Texture: {fileID: 2800000, guid: 6054c88f0fd342340baf68b1dfb1753c, type: 3}
+        m_Texture: {fileID: 2800000, guid: e1f9c0600cd964f408e19f12c2bd8fb6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: dff4c72287011d94289ee1a2570ac8e7, type: 3}
-        m_Scale: {x: 4.37, y: 6.24}
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main_Texture:
-        m_Texture: {fileID: 2800000, guid: dff4c72287011d94289ee1a2570ac8e7, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7860a697981d0a84e88d30e0c8be1d57, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -90,11 +86,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal_Map:
-        m_Texture: {fileID: 2800000, guid: 2e7fcf85ec6e77b418b2ed8d6d93a9c9, type: 3}
+        m_Texture: {fileID: 2800000, guid: fdfab319808373945aa014762ba7a80e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal_Texture:
-        m_Texture: {fileID: 2800000, guid: 2e7fcf85ec6e77b418b2ed8d6d93a9c9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1e1b0e4d2a24c6b46af143f9f28cb105, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -102,7 +98,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Occlusion_Texture:
-        m_Texture: {fileID: 2800000, guid: 34ae18e2c717a8d4893cb6cc6ec54b65, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3f1fd722826246e4db47d04818164a89, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
@@ -114,11 +110,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Spec_Gloss_Texture:
-        m_Texture: {fileID: 2800000, guid: ab6d14932d3cb3a49bab3eb3c6da8174, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Specular_Map:
-        m_Texture: {fileID: 2800000, guid: 94dbca9725c109d4ca3f17d9c7cd9ec1, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -156,13 +152,13 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Height_Amplitude: 0.005
-    - _LOD: 5
-    - _LOD_Threshold: 5
+    - _Height_Amplitude: 0.0171
+    - _LOD: 1
+    - _LOD_Threshold: 1
     - _Metallic: 0
     - _Normal_Strength: 1
     - _OcclusionStrength: 1
-    - _Occlusion_Strength: 0.383
+    - _Occlusion_Strength: 0.607
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
@@ -172,14 +168,13 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
-    - _Steps: 4
+    - _Steps: 2
     - _Surface: 0
-    - _Tiling: 0.425
-    - _Use_Height_Map: 0
-    - _Use_Specular_Gloss_Texture: 1
-    - _Use_Specular_Map: 1
+    - _Tiling: 0.268
+    - _Use_Specular_Gloss_Texture: 0
+    - _Use_Specular_Map: 0
     - _Use_XY_Height: 0
-    - _Use_XZ_Height: 0
+    - _Use_XZ_Height: 1
     - _Use_YZ_Height: 0
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
@@ -188,18 +183,18 @@ Material:
     - _ZWriteControl: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Base_Color: {r: 1, g: 0.9764706, b: 0.84313726, a: 1}
-    - _Color: {r: 1, g: 0.9753885, b: 0.8443396, a: 1}
+    - _Base_Color: {r: 0.7830189, g: 0.769795, b: 0.7350036, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Emission_Color: {r: 0.009433985, g: 0.007752296, b: 0, a: 1}
+    - _Emission_Color: {r: 0, g: 0, b: 0, a: 1}
     - _Offset_Sides_X: {r: 0, g: 0, b: 0, a: 0}
     - _Offset_Sides_Y: {r: 0, g: 0, b: 0, a: 0}
     - _Offset_Sides_Z: {r: 0, g: 0, b: 0, a: 0}
-    - _Rotation: {r: 0, g: 0, b: -90, a: 0}
+    - _Rotation: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!114 &2624605884770665955
+--- !u!114 &3081591178867506220
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
