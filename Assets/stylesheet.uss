@@ -251,6 +251,45 @@
     border-color: rgba(15, 13, 10, 0.6);
 }
 
+/* Swells and warms up while an item is under the dot. */
+.crosshair-active {
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    margin-top: -5px;
+    border-radius: 5px;
+    background-color: rgba(240, 220, 155, 0.95);
+}
+
+.interact-prompt {
+    position: absolute;
+    top: 50%;
+    margin-top: 26px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.interact-key {
+    font-size: 13px;
+    color: rgb(230, 210, 150);
+    -unity-font-style: bold;
+    background-color: rgba(15, 13, 10, 0.8);
+    border-width: 1px;
+    border-color: rgba(200, 180, 120, 0.6);
+    border-radius: 3px;
+    padding-top: 1px;
+    padding-bottom: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+    margin-right: 9px;
+}
+
+.interact-label {
+    font-size: 14px;
+    color: rgba(235, 225, 195, 0.9);
+    letter-spacing: 3px;
+}
+
 .stamina-bar {
     position: absolute;
     bottom: 116px;

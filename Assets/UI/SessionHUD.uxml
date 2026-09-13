@@ -6,6 +6,10 @@
             <ui:Label name="CodeLabel" text="......" picking-mode="Ignore" style="font-size: 34px; color: rgb(230, 210, 150); -unity-font-style: bold; letter-spacing: 10px;" />
         </ui:VisualElement>
         <ui:VisualElement name="Crosshair" picking-mode="Ignore" class="crosshair" />
+        <ui:VisualElement name="InteractPrompt" picking-mode="Ignore" class="interact-prompt" style="display: none;">
+            <ui:Label text="E" picking-mode="Ignore" class="interact-key" />
+            <ui:Label name="InteractLabel" text="PICK UP" picking-mode="Ignore" class="interact-label" />
+        </ui:VisualElement>
         <ui:VisualElement name="StaminaBar" picking-mode="Ignore" class="stamina-bar">
             <ui:VisualElement name="StaminaFill" picking-mode="Ignore" class="stamina-fill" />
         </ui:VisualElement>

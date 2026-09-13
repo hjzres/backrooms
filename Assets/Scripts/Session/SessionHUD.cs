@@ -19,6 +19,8 @@ namespace Session
         VisualElement staminaBar;
         VisualElement staminaFill;
         VisualElement crosshair;
+        VisualElement interactPrompt;
+        Label interactLabel;
 
         VisualElement camOverlay;
         VisualElement recDot;
@@ -77,6 +79,8 @@ namespace Session
             staminaBar = root.Q("StaminaBar");
             staminaFill = root.Q("StaminaFill");
             crosshair = root.Q("Crosshair");
+            interactPrompt = root.Q("InteractPrompt");
+            interactLabel = root.Q<Label>("InteractLabel");
 
             camOverlay = root.Q("CamOverlay");
             recDot = root.Q("RecDot");
@@ -155,6 +159,7 @@ namespace Session
             UpdateCode();
             UpdateStamina();
             UpdateCamcorder();
+            UpdateInteractPrompt();
 
             if (LocalUi.PauseOpen && Time.unscaledTime >= nextPlayersPoll)
             {
@@ -187,6 +192,9 @@ namespace Session
             // The viewfinder brackets replace the crosshair.
             if (crosshair != null)
                 crosshair.style.display = on ? DisplayStyle.None : DisplayStyle.Flex;
+
+            if (on && interactPrompt != null)
+                interactPrompt.style.display = DisplayStyle.None;
 
             if (on)
                 camTimer = 0f;
@@ -618,6 +626,23 @@ namespace Session
                 codeLabel.text = code.ToUpperInvariant();
                 codeResolved = true;
             }
+        }
+
+        // Polled rather than event-driven: PlayerInteractor re-resolves its
+        // target every frame anyway, like the stamina readout below.
+        void UpdateInteractPrompt()
+        {
+            if (interactPrompt == null) return;
+
+            var interactor = PlayerInteractor.Local;
+            WorldItem item = interactor != null ? interactor.Target : null;
+            bool show = item != null;
+
+            interactPrompt.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (show)
+                interactLabel.text = $"PICK UP {item.ItemName}";
+
+            crosshair?.EnableInClassList("crosshair-active", show);
         }
 
         void UpdateStamina()
