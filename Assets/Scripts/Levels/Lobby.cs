@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -42,13 +43,25 @@ namespace Assets.Scripts.Levels
 
         [SerializeField] [MinMaxSlider(1, 20)] private Vector2Int wallChainRange;
 
+        [Header("Limitless Chunk Parameters")]
+
+        [SerializeField] private Transform player;
+
+        [SerializeField] private int renderDistance = 4;
+
+        private const int chunkLength = 50;
+
+        private ChunkTracker chunkTracker;
+
+        private GameObject chunkContainer;
+
         private static readonly float2[] NormalizedDirections = new float2[5] 
         { 
             new(0, 1),  // UP
             new(1, 0),  // RIGHT
             new(0, -1), // DOWN
             new(-1, 0), // LEFT
-            float2.zero   // NONE
+            float2.zero // NONE
         };
 
         // Vertices are created in a clockwise direction starting with the bottom left and ending with the bottom right.
@@ -85,9 +98,7 @@ namespace Assets.Scripts.Levels
         {
             public float2 position;
 
-            public int dirStartIndex;
-
-            public int dirEndIndex;
+            public int dirStartIndex, dirEndIndex;
         }
 
         [BurstCompile]
@@ -160,7 +171,7 @@ namespace Assets.Scripts.Levels
                 triangles[index + 5] = v1;
             }
 
-            private void SetQuadUVs(int index, ref NativeArray<float2> uvs)
+            private readonly void SetQuadUVs(int index, ref NativeArray<float2> uvs)
             {
                 uvs[index] = new float2(0f, 0f);
                 uvs[index + 1] = new float2(0f, 1f);
@@ -193,18 +204,41 @@ namespace Assets.Scripts.Levels
             }
         }
 
-        [Button]
-        public void GenerateMaze()
+        private void Awake()
         {
             seed = (uint)DateTime.Now.Ticks;
-            Unity.Mathematics.Random prng = new(seed);
+            RandomUtility.Initialize(seed);
 
-            Chunk chunk = new(float2.zero, 50, 1, gray);
+            chunkTracker = new(player, chunkLength);
+            chunkContainer = new("Created Chunks");
+        }
+
+        private void FixedUpdate()
+        {
+            for (int x = -renderDistance; x <= renderDistance; x++)
+            {
+                for (int z = -renderDistance; z <= renderDistance; z++)
+                {
+                    float2 coord = new(chunkTracker.XChunkPos + x, chunkTracker.ZChunkPos + z);
+
+                    if (!chunkTracker.chunkDictionary.ContainsKey(coord))
+                    {
+                        float2 position = coord * chunkLength;
+
+                        Chunk chunk = new(position, chunkLength, 1, gray, chunkContainer.transform, chunk => { GenerateMaze(chunk); });
+                        chunkTracker.chunkDictionary.Add(coord, chunk);
+                    }
+                }
+            }
+        }
+
+        public void GenerateMaze(Chunk chunk)
+        {
             NativeList<Point> points = new(0, Allocator.TempJob);
             NativeList<Direction> directions = new(0, Allocator.TempJob);
 
-            DetermineStartCoordinates(chunk, ref points, ref prng);
-            AssignDirections(ref points, ref directions, ref prng);
+            DetermineStartCoordinates(chunkLength, new float2(chunk.transform.position.x, chunk.transform.position.z), ref points);
+            AssignDirections(ref points, ref directions);
             CalculateMeshCounts(points, directions, out int verticeLength, out int triangleLength);
 
             NativeArray<float3> vertsArr = new(verticeLength, Allocator.TempJob);
@@ -213,8 +247,8 @@ namespace Assets.Scripts.Levels
 
             MazeBuilder job = new()
             {
-                points = points,
-                directions = directions,
+                points = points.AsArray(),
+                directions = directions.AsArray(),
                 vertices = vertsArr,
                 triangles = trisArr,
                 uvs = uvsArr,
@@ -242,15 +276,16 @@ namespace Assets.Scripts.Levels
 
             HandleShading(mesh);
 
-            GameObject mazeObj = new("Maze", typeof(MeshFilter), typeof(MeshRenderer));
+            GameObject mazeObj = new("Maze Mesh", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             mazeObj.GetComponent<MeshFilter>().mesh = mesh;
-            mazeObj.GetComponent<MeshRenderer>().material = arrowWallpaper; 
+            mazeObj.GetComponent<MeshRenderer>().material = arrowWallpaper;
+            mazeObj.GetComponent<MeshCollider>().sharedMesh = mesh;
             mazeObj.transform.parent = chunk.transform;
         }
 
-        private void DetermineStartCoordinates(Chunk chunk, ref NativeList<Point> points, ref Unity.Mathematics.Random prng)
+        private void DetermineStartCoordinates(int chunkLength, float2 chunkPosition, ref NativeList<Point> points)
         {
-            float spacing = (float)chunk.length / segments;
+            float spacing = (float)chunkLength / segments;
             float chance = 0f;
 
             for (int x = 0; x <= segments; x++)
@@ -263,18 +298,17 @@ namespace Assets.Scripts.Levels
                         continue;
                     }
 
-                    chance += prng.NextFloat(pointSpawnChance.x, pointSpawnChance.y);
+                    chance += RandomUtility.State.NextFloat(pointSpawnChance.x, pointSpawnChance.y);
 
                     if (chance >= chanceThreshold)
                     {
-                        float2 coord = new(chunk.transform.position.x + x * spacing, chunk.transform.position.z + z * spacing);
-                        Point point = new();
-                        point.position = coord;
+                        float2 coord = new(chunkPosition.x + x * spacing, chunkPosition.y + z * spacing);
+                        points.Add(new() { position = coord });
 
-                        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                        visual.transform.position = new float3(coord.x, 0, coord.y);
-                        visual.transform.parent = chunk.transform; 
-                        points.Add(point);
+                        // DEMONSTRATES WHERE THE STARTING POINT IS.
+                        // GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        // visual.transform.position = new float3(coord.x, 0, coord.y);
+                        // visual.transform.parent = chunk.transform; 
 
                         chance = 0f;
                     }
@@ -284,7 +318,7 @@ namespace Assets.Scripts.Levels
 
         // Assigns all directions to one array that is split using dirStartIndex and dirEndIndex from the Point struct.
         // Every set of directions for the points ends with Direction.NONE
-        private void AssignDirections(ref NativeList<Point> points, ref NativeList<Direction> directions, ref Unity.Mathematics.Random prng)
+        private void AssignDirections(ref NativeList<Point> points, ref NativeList<Direction> directions)
         {
             int startIndex = 0;
 
@@ -292,11 +326,11 @@ namespace Assets.Scripts.Levels
             {
                 Point point = points[i];
                 Direction lastDir = Direction.NONE;
-                int amount = prng.NextInt(wallChainRange.x, wallChainRange.y);
+                int amount = RandomUtility.State.NextInt(wallChainRange.x, wallChainRange.y);
 
                 for (int j = 0; j <= amount; j++)
                 {
-                    Direction nextDir = RandomizeDirection(lastDir, ref prng);
+                    Direction nextDir = RandomizeDirection(lastDir);
                     directions.Add(nextDir);
                     lastDir = nextDir;
                 }
@@ -310,9 +344,9 @@ namespace Assets.Scripts.Levels
             }
         }
 
-        private static Direction RandomizeDirection(Direction lastDirection, ref Unity.Mathematics.Random prng)
+        private static Direction RandomizeDirection(Direction lastDirection)
         {
-            int num = prng.NextInt(0, 4);
+            int num = RandomUtility.State.NextInt(0, 4);
 
             return num switch
             {

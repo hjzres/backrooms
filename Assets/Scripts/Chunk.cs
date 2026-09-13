@@ -1,3 +1,4 @@
+using System;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -21,7 +22,7 @@ namespace Assets.Scripts
 
         private readonly Vector2[] uvs;
 
-        public Chunk(float2 position, int length, int resolution, Material material, Transform parent = null)
+        public Chunk(float2 position, int length, int resolution, Material material, Transform parent = null, Action<Chunk> OnCreated = null)
         {
             gameObject = new("Chunk", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             transform = gameObject.transform;
@@ -38,19 +39,15 @@ namespace Assets.Scripts
 
             CreateMeshData();
 
-            Mesh mesh = new()
-            {
-                vertices = vertices,
-                triangles = triangles,
-                normals = normals,
-                uv = uvs  
-            };
+            Mesh mesh = new() { vertices = vertices, triangles = triangles, normals = normals, uv = uvs };
 
             mesh.RecalculateNormals();
             gameObject.GetComponent<MeshFilter>().mesh = mesh;
             gameObject.GetComponent<MeshRenderer>().material = material;
             gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
             transform.SetParent(parent);
+
+            OnCreated?.Invoke(this);
         }
 
         private void CreateMeshData()
@@ -87,6 +84,11 @@ namespace Assets.Scripts
                     verts++;   
                 }
             }
+        }
+
+        public void SetActive(bool status)
+        {
+            gameObject.SetActive(status);
         }
     }
 }
