@@ -30,6 +30,7 @@ namespace Session
         VisualElement inventoryOverlay;
         VisualElement inventoryGrid;
         Label inventoryCount;
+        VisualElement capacityMeter;
         VisualElement hotbar;
         VisualElement dragGhost;
         Label dragGhostLabel;
@@ -89,6 +90,7 @@ namespace Session
             inventoryOverlay = root.Q("InventoryOverlay");
             inventoryGrid = root.Q("InventoryGrid");
             inventoryCount = root.Q<Label>("InventoryCount");
+            capacityMeter = root.Q("CapacityMeter");
             hotbar = root.Q("Hotbar");
             dragGhost = root.Q("DragGhost");
             dragGhostLabel = root.Q<Label>("DragGhostLabel");
@@ -382,7 +384,9 @@ namespace Session
             if (inventoryGrid != null)
             {
                 inventoryGrid.Clear();
-                inventoryCount.text = $"{(inventory != null ? inventory.UsedSlots : 0)}/{PlayerInventory.SlotCount}";
+                int used = inventory != null ? inventory.UsedSlots : 0;
+                inventoryCount.text = $"{used}/{PlayerInventory.SlotCount}";
+                RebuildCapacityMeter(used);
 
                 for (int i = 0; i < PlayerInventory.SlotCount; i++)
                     inventoryGrid.Add(CreateSlot(PlayerInventory.Container.Backpack, i, inventory));
@@ -414,18 +418,23 @@ namespace Session
             if (item != null)
                 slot.AddToClassList("inv-slot-filled");
 
-            var label = new Label(item ?? (isHotbar ? string.Empty : "EMPTY"));
-            label.AddToClassList(item != null ? "inv-slot-item" : "inv-slot-empty");
+            // Every child ignores picking so the drag callbacks below, which
+            // are registered on the slot itself, still see the pointer.
+            var frame = Decoration("slot-frame");
+            frame.Add(Decoration(item != null ? "slot-icon" : "slot-empty-mark"));
+            slot.Add(frame);
+
+            var label = new Label(item ?? string.Empty);
+            label.AddToClassList("slot-name");
             label.pickingMode = PickingMode.Ignore;
             slot.Add(label);
 
-            if (isHotbar)
-            {
-                var number = new Label((index + 1).ToString());
-                number.AddToClassList("hotbar-number");
-                number.pickingMode = PickingMode.Ignore;
-                slot.Add(number);
-            }
+            // Backpack slots are numbered too: the index is what the hint text
+            // and the hotbar keys refer to.
+            var number = new Label((index + 1).ToString());
+            number.AddToClassList("slot-index");
+            number.pickingMode = PickingMode.Ignore;
+            slot.Add(number);
 
             var view = new SlotView { Element = slot, Container = container, Index = index };
             slotViews.Add(view);
@@ -436,6 +445,30 @@ namespace Session
             slot.RegisterCallback<PointerCaptureOutEvent>(_ => CancelDrag());
 
             return slot;
+        }
+
+        // One tick per backpack slot, lit up to the number in use.
+        void RebuildCapacityMeter(int used)
+        {
+            if (capacityMeter == null) return;
+
+            capacityMeter.Clear();
+
+            for (int i = 0; i < PlayerInventory.SlotCount; i++)
+            {
+                var tick = Decoration("capacity-tick");
+                if (i < used)
+                    tick.AddToClassList("capacity-tick-on");
+                capacityMeter.Add(tick);
+            }
+        }
+
+        static VisualElement Decoration(string className)
+        {
+            var element = new VisualElement();
+            element.AddToClassList(className);
+            element.pickingMode = PickingMode.Ignore;
+            return element;
         }
 
         // Swaps the hovered backpack slot into a hotbar slot with 1-4.
@@ -604,7 +637,7 @@ namespace Session
         {
             // Half of .drag-ghost's size; it is hidden until a drag starts, so
             // its resolved size isn't available on the first frame.
-            const float halfSize = 34f;
+            const float halfSize = 36f;
 
             Vector2 local = dragGhost.parent.WorldToLocal(panelPos);
             dragGhost.style.left = local.x - halfSize;
@@ -640,7 +673,7 @@ namespace Session
 
             interactPrompt.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
             if (show)
-                interactLabel.text = $"PICK UP {item.ItemName}";
+                interactLabel.text = item.ItemName;
 
             crosshair?.EnableInClassList("crosshair-active", show);
         }

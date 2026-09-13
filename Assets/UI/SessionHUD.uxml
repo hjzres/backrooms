@@ -5,10 +5,21 @@
             <ui:Label text="SESSION CODE" picking-mode="Ignore" style="font-size: 12px; color: rgba(200, 180, 120, 0.55); letter-spacing: 6px; margin-bottom: 4px;" />
             <ui:Label name="CodeLabel" text="......" picking-mode="Ignore" style="font-size: 34px; color: rgb(230, 210, 150); -unity-font-style: bold; letter-spacing: 10px;" />
         </ui:VisualElement>
-        <ui:VisualElement name="Crosshair" picking-mode="Ignore" class="crosshair" />
+        <ui:VisualElement name="Crosshair" picking-mode="Ignore" class="reticle">
+            <ui:VisualElement picking-mode="Ignore" class="reticle-dot" />
+            <ui:VisualElement picking-mode="Ignore" class="reticle-tick reticle-tick-t" />
+            <ui:VisualElement picking-mode="Ignore" class="reticle-tick reticle-tick-b" />
+            <ui:VisualElement picking-mode="Ignore" class="reticle-tick reticle-tick-l" />
+            <ui:VisualElement picking-mode="Ignore" class="reticle-tick reticle-tick-r" />
+        </ui:VisualElement>
         <ui:VisualElement name="InteractPrompt" picking-mode="Ignore" class="interact-prompt" style="display: none;">
-            <ui:Label text="E" picking-mode="Ignore" class="interact-key" />
-            <ui:Label name="InteractLabel" text="PICK UP" picking-mode="Ignore" class="interact-label" />
+            <ui:VisualElement picking-mode="Ignore" class="interact-key">
+                <ui:Label text="E" picking-mode="Ignore" class="interact-key-glyph" />
+            </ui:VisualElement>
+            <ui:VisualElement picking-mode="Ignore" class="interact-text">
+                <ui:Label text="PICK UP" picking-mode="Ignore" class="interact-verb" />
+                <ui:Label name="InteractLabel" text="BOX" picking-mode="Ignore" class="interact-item" />
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="StaminaBar" picking-mode="Ignore" class="stamina-bar">
             <ui:VisualElement name="StaminaFill" picking-mode="Ignore" class="stamina-fill" />
@@ -35,12 +46,30 @@
         </ui:VisualElement>
         <ui:VisualElement name="InventoryOverlay" class="inventory-overlay" style="display: none;">
             <ui:VisualElement name="InventoryPanel" class="panel inventory-panel">
-                <ui:VisualElement class="inventory-header">
-                    <ui:Label text="INVENTORY" class="inventory-title" />
-                    <ui:Label name="InventoryCount" text="0/8" class="inventory-count" />
+                <ui:VisualElement picking-mode="Ignore" class="inventory-header">
+                    <ui:VisualElement picking-mode="Ignore" class="inventory-bullet" />
+                    <ui:Label text="INVENTORY" picking-mode="Ignore" class="inventory-title" />
+                    <ui:VisualElement picking-mode="Ignore" class="inventory-rule" />
+                    <ui:VisualElement picking-mode="Ignore" class="inventory-capacity">
+                        <ui:Label name="InventoryCount" text="0/8" picking-mode="Ignore" class="inventory-count" />
+                        <ui:VisualElement name="CapacityMeter" picking-mode="Ignore" class="capacity-meter" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
-                <ui:Label text="DRAG TO THE HOTBAR OR PRESS 1 - 4 &#183; TAB TO CLOSE" class="inventory-hint" />
+                <ui:VisualElement picking-mode="Ignore" class="inventory-footer">
+                    <ui:VisualElement picking-mode="Ignore" class="hint">
+                        <ui:Label text="DRAG" picking-mode="Ignore" class="hint-key" />
+                        <ui:Label text="MOVE" picking-mode="Ignore" class="hint-text" />
+                    </ui:VisualElement>
+                    <ui:VisualElement picking-mode="Ignore" class="hint">
+                        <ui:Label text="1 - 4" picking-mode="Ignore" class="hint-key" />
+                        <ui:Label text="ASSIGN" picking-mode="Ignore" class="hint-text" />
+                    </ui:VisualElement>
+                    <ui:VisualElement picking-mode="Ignore" class="hint">
+                        <ui:Label text="TAB" picking-mode="Ignore" class="hint-key" />
+                        <ui:Label text="CLOSE" picking-mode="Ignore" class="hint-text" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="Hotbar" picking-mode="Ignore" class="hotbar" />
@@ -70,7 +99,8 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="DragGhost" picking-mode="Ignore" class="drag-ghost" style="display: none;">
-            <ui:Label name="DragGhostLabel" picking-mode="Ignore" class="inv-slot-item" />
+            <ui:VisualElement picking-mode="Ignore" class="slot-icon" />
+            <ui:Label name="DragGhostLabel" picking-mode="Ignore" class="slot-name" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

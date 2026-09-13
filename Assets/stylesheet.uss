@@ -235,59 +235,143 @@
     border-radius: 3px;
 }
 
-/* ── In-game HUD ── */
-.crosshair {
+/* ── Reticle ──
+   A fixed dot, plus four ticks that converge on it when something is in
+   reach. Ticks sit at their resting offsets here and move inward under
+   .crosshair-active, so the transition plays in both directions. */
+.reticle {
     position: absolute;
     left: 50%;
     top: 50%;
+    width: 40px;
+    height: 40px;
+    margin-left: -20px;
+    margin-top: -20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.reticle-dot {
     width: 6px;
     height: 6px;
-    margin-left: -3px;
-    margin-top: -3px;
     border-radius: 3px;
     background-color: rgba(245, 243, 235, 0.9);
     /* Dark rim; a plain light dot vanishes against the yellow walls. */
     border-width: 1px;
-    border-color: rgba(15, 13, 10, 0.6);
+    border-color: rgba(12, 10, 7, 0.65);
+    transition-duration: 0.12s;
 }
 
-/* Swells and warms up while an item is under the dot. */
-.crosshair-active {
-    width: 10px;
-    height: 10px;
-    margin-left: -5px;
-    margin-top: -5px;
-    border-radius: 5px;
-    background-color: rgba(240, 220, 155, 0.95);
+.reticle-tick {
+    position: absolute;
+    background-color: rgb(240, 224, 170);
+    opacity: 0;
+    transition-duration: 0.13s;
 }
 
+.reticle-tick-t {
+    width: 2px;
+    height: 7px;
+    top: 1px;
+}
+
+.reticle-tick-b {
+    width: 2px;
+    height: 7px;
+    bottom: 1px;
+}
+
+.reticle-tick-l {
+    width: 7px;
+    height: 2px;
+    left: 1px;
+}
+
+.reticle-tick-r {
+    width: 7px;
+    height: 2px;
+    right: 1px;
+}
+
+.crosshair-active > .reticle-dot {
+    background-color: rgb(240, 224, 170);
+    border-color: rgba(12, 10, 7, 0.8);
+}
+
+.crosshair-active > .reticle-tick {
+    opacity: 1;
+}
+
+.crosshair-active > .reticle-tick-t {
+    top: 6px;
+}
+
+.crosshair-active > .reticle-tick-b {
+    bottom: 6px;
+}
+
+.crosshair-active > .reticle-tick-l {
+    left: 6px;
+}
+
+.crosshair-active > .reticle-tick-r {
+    right: 6px;
+}
+
+/* ── Pickup prompt ── */
 .interact-prompt {
     position: absolute;
     top: 50%;
-    margin-top: 26px;
+    margin-top: 32px;
     flex-direction: row;
     align-items: center;
+    padding: 7px 16px 7px 11px;
+    background-color: rgba(10, 9, 6, 0.6);
+    border-left-width: 2px;
+    border-left-color: rgb(214, 190, 124);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
 }
 
+/* Deeper bottom border reads as a physical key cap. */
 .interact-key {
-    font-size: 13px;
-    color: rgb(230, 210, 150);
-    -unity-font-style: bold;
-    background-color: rgba(15, 13, 10, 0.8);
+    width: 26px;
+    height: 26px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(24, 21, 15, 0.95);
     border-width: 1px;
-    border-color: rgba(200, 180, 120, 0.6);
-    border-radius: 3px;
-    padding-top: 1px;
-    padding-bottom: 3px;
-    padding-left: 7px;
-    padding-right: 7px;
-    margin-right: 9px;
+    border-color: rgba(198, 178, 120, 0.5);
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(198, 178, 120, 0.8);
+    border-radius: 4px;
+    margin-right: 12px;
 }
 
-.interact-label {
-    font-size: 14px;
-    color: rgba(235, 225, 195, 0.9);
+.interact-key-glyph {
+    font-size: 13px;
+    color: rgb(238, 222, 168);
+    -unity-font-style: bold;
+    margin: 0;
+}
+
+.interact-text {
+    justify-content: center;
+}
+
+.interact-verb {
+    font-size: 9px;
+    color: rgba(206, 190, 150, 0.5);
+    letter-spacing: 4px;
+    margin: 0;
+}
+
+.interact-item {
+    font-size: 15px;
+    color: rgb(240, 226, 178);
     letter-spacing: 3px;
+    -unity-font-style: bold;
+    margin: 0;
 }
 
 .stamina-bar {
@@ -433,34 +517,77 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(8, 7, 5, 0.72);
+    background-color: rgba(6, 5, 4, 0.82);
     align-items: center;
     justify-content: center;
 }
 
 .inventory-panel {
-    width: 470px;
-    padding: 24px 28px;
+    width: 444px;
+    background-color: rgba(24, 22, 16, 0.97);
+    border-color: rgba(120, 107, 70, 0.45);
+    border-radius: 3px;
+    padding: 20px 24px 16px 24px;
 }
 
 .inventory-header {
     flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 18px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.inventory-bullet {
+    width: 6px;
+    height: 6px;
+    background-color: rgb(214, 190, 124);
+    rotate: 45deg;
+    margin-right: 12px;
 }
 
 .inventory-title {
-    font-size: 22px;
-    color: rgb(200, 180, 120);
-    letter-spacing: 6px;
+    font-size: 17px;
+    color: rgb(226, 208, 152);
+    letter-spacing: 7px;
     -unity-font-style: bold;
+    margin: 0;
+}
+
+/* Fills the space between the title and the capacity readout. */
+.inventory-rule {
+    flex-grow: 1;
+    height: 1px;
+    background-color: rgba(140, 125, 82, 0.35);
+    margin: 0 16px;
+}
+
+.inventory-capacity {
+    align-items: flex-end;
 }
 
 .inventory-count {
-    font-size: 14px;
-    color: rgba(200, 180, 120, 0.5);
-    letter-spacing: 2px;
+    font-size: 11px;
+    color: rgba(206, 190, 150, 0.55);
+    letter-spacing: 3px;
+    margin: 0;
+}
+
+/* Negative margin cancels the leading tick's own margin. */
+.capacity-meter {
+    flex-direction: row;
+    margin-top: 6px;
+    margin-left: -3px;
+}
+
+.capacity-tick {
+    width: 10px;
+    height: 3px;
+    background-color: rgba(196, 176, 118, 0.16);
+    margin-left: 3px;
+    transition-duration: 0.15s;
+}
+
+.capacity-tick-on {
+    background-color: rgb(214, 190, 124);
 }
 
 .inventory-grid {
@@ -469,103 +596,184 @@
     justify-content: center;
 }
 
+/* ── Slots ── */
 .inv-slot {
-    width: 92px;
-    height: 92px;
-    margin: 4px;
-    background-color: rgba(40, 36, 25, 0.85);
+    width: 88px;
+    height: 88px;
+    margin: 5px;
+    background-color: rgba(33, 30, 21, 0.9);
     border-width: 1px;
-    border-color: rgba(85, 75, 50, 0.5);
-    border-radius: 4px;
-    align-items: center;
-    justify-content: center;
+    border-color: rgba(88, 79, 52, 0.55);
+    border-radius: 3px;
     transition-duration: 0.12s;
 }
 
-.inv-slot:hover {
-    background-color: rgba(55, 49, 33, 0.9);
-    border-color: rgba(200, 180, 120, 0.7);
-}
-
 .inv-slot-filled {
-    border-color: rgba(200, 180, 120, 0.5);
+    background-color: rgba(46, 41, 27, 0.92);
+    border-color: rgba(196, 176, 118, 0.45);
 }
 
 /* Slot under the cursor — the one the 1-4 keys act on. */
 .inv-slot-hover {
-    background-color: rgba(60, 54, 36, 0.9);
-    border-color: rgb(200, 180, 120);
+    background-color: rgba(60, 54, 35, 0.95);
+    border-color: rgba(232, 214, 158, 0.9);
 }
 
 .inv-slot-dragging {
-    opacity: 0.3;
+    opacity: 0.25;
 }
 
 .inv-slot-drop-target {
-    background-color: rgba(82, 73, 47, 0.95);
-    border-color: rgb(230, 210, 150);
+    background-color: rgba(86, 76, 46, 0.95);
+    border-color: rgb(240, 226, 178);
+    scale: 1.04;
 }
 
-.inv-slot-empty {
-    font-size: 10px;
-    color: rgba(200, 180, 120, 0.18);
+/* Inset well the item glyph sits in. */
+.slot-frame {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    margin: 6px 6px 2px 6px;
+    background-color: rgba(10, 9, 6, 0.5);
+    border-width: 1px;
+    border-color: rgba(140, 125, 82, 0.14);
+    border-radius: 2px;
+}
+
+/* Stand-in for real item art: the black crate as it looks in the world,
+   lit along its top edge. */
+.slot-icon {
+    width: 34px;
+    height: 34px;
+    background-color: rgb(14, 13, 11);
+    border-width: 1px;
+    border-color: rgba(168, 150, 100, 0.35);
+    border-top-color: rgba(232, 214, 158, 0.7);
+    border-radius: 2px;
+}
+
+.slot-empty-mark {
+    width: 10px;
+    height: 10px;
+    border-width: 1px;
+    border-color: rgba(196, 176, 118, 0.12);
+}
+
+.slot-name {
+    font-size: 9px;
+    color: rgba(226, 208, 152, 0.75);
     letter-spacing: 2px;
-}
-
-.inv-slot-item {
-    font-size: 12px;
-    color: rgb(230, 210, 150);
-    letter-spacing: 1px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
-    white-space: normal;
+    margin: 0 0 5px 0;
 }
 
-.inventory-hint {
+/* Corner tab, so the index never crowds the glyph. */
+.slot-index {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 9px;
+    color: rgba(196, 176, 118, 0.35);
+    -unity-font-style: bold;
+    background-color: rgba(10, 9, 6, 0.55);
+    padding: 1px 4px 2px 4px;
+    border-bottom-right-radius: 3px;
+    margin: 0;
+}
+
+.inv-slot-filled > .slot-index {
+    color: rgba(232, 214, 158, 0.7);
+}
+
+.inventory-footer {
+    flex-direction: row;
+    justify-content: center;
     margin-top: 16px;
-    font-size: 11px;
-    color: rgba(200, 180, 120, 0.35);
-    letter-spacing: 4px;
-    -unity-text-align: middle-center;
+    padding-top: 13px;
+    border-top-width: 1px;
+    border-top-color: rgba(140, 125, 82, 0.22);
+}
+
+.hint {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 11px;
+}
+
+.hint-key {
+    font-size: 9px;
+    color: rgba(226, 208, 152, 0.85);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    background-color: rgba(10, 9, 6, 0.7);
+    border-width: 1px;
+    border-color: rgba(140, 125, 82, 0.4);
+    border-radius: 2px;
+    padding: 2px 5px 3px 5px;
+    margin: 0 7px 0 0;
+}
+
+.hint-text {
+    font-size: 9px;
+    color: rgba(206, 190, 150, 0.4);
+    letter-spacing: 3px;
+    margin: 0;
 }
 
 /* ── Hotbar ── */
 /* Sits after the inventory overlay in the tree so it stays visible, and
-   drag-targetable, while the backpack is open. */
+   drag-targetable, while the backpack is open. Horizontal centring comes
+   from the HUD root's align-items. */
 .hotbar {
     position: absolute;
-    bottom: 24px;
-    left: 0;
-    right: 0;
+    bottom: 26px;
     flex-direction: row;
-    justify-content: center;
+    padding: 6px;
+    background-color: rgba(10, 9, 6, 0.5);
+    border-width: 1px;
+    border-color: rgba(88, 79, 52, 0.35);
+    border-radius: 4px;
 }
 
 .hotbar-slot {
-    width: 74px;
-    height: 74px;
-    margin: 0 4px;
+    width: 66px;
+    height: 66px;
+    margin: 0 3px;
 }
 
-.hotbar-number {
-    position: absolute;
-    top: 3px;
-    left: 6px;
-    font-size: 11px;
-    color: rgba(200, 180, 120, 0.55);
-    -unity-font-style: bold;
+.hotbar-slot > .slot-frame {
+    margin: 5px 5px 1px 5px;
 }
 
+.hotbar-slot > .slot-frame > .slot-icon {
+    width: 26px;
+    height: 26px;
+}
+
+.hotbar-slot > .slot-name {
+    font-size: 8px;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+/* Tilted, so a dragged item reads as lifted off the grid. */
 .drag-ghost {
     position: absolute;
-    width: 68px;
-    height: 68px;
+    width: 72px;
+    height: 72px;
     align-items: center;
     justify-content: center;
-    background-color: rgba(58, 52, 34, 0.95);
+    background-color: rgba(56, 50, 32, 0.96);
     border-width: 1px;
-    border-color: rgb(230, 210, 150);
-    border-radius: 4px;
+    border-color: rgb(240, 226, 178);
+    border-radius: 3px;
+    rotate: -4deg;
+}
+
+.drag-ghost > .slot-name {
+    margin: 6px 0 0 0;
 }
 
 /* ── Pause menu ── */
