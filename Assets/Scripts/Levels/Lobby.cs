@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -51,7 +50,7 @@ namespace Assets.Scripts.Levels
 
         private const int chunkLength = 50;
 
-        private ChunkTracker chunkTracker;
+        private ChunkTracker tracker;
 
         private GameObject chunkContainer;
 
@@ -209,25 +208,40 @@ namespace Assets.Scripts.Levels
             seed = (uint)DateTime.Now.Ticks;
             RandomUtility.Initialize(seed);
 
-            chunkTracker = new(player, chunkLength);
+            tracker = new(player, chunkLength);
             chunkContainer = new("Created Chunks");
         }
 
         private void FixedUpdate()
         {
+            // TODO: make it run only when the player enters a new chunk.
+            for (int i = 0; i < tracker.activeChunkCoords.Count; i++)
+            {
+                tracker.chunkDictionary[tracker.activeChunkCoords[i]].SetActive(false);
+            }
+
+            tracker.activeChunkCoords.Clear();
+
             for (int x = -renderDistance; x <= renderDistance; x++)
             {
                 for (int z = -renderDistance; z <= renderDistance; z++)
                 {
-                    float2 coord = new(chunkTracker.XChunkPos + x, chunkTracker.ZChunkPos + z);
+                    float2 coord = new(tracker.XChunkPos + x, tracker.ZChunkPos + z);
 
-                    if (!chunkTracker.chunkDictionary.ContainsKey(coord))
+                    if (!tracker.chunkDictionary.ContainsKey(coord))
                     {
                         float2 position = coord * chunkLength;
 
                         Chunk chunk = new(position, chunkLength, 1, gray, chunkContainer.transform, chunk => { GenerateMaze(chunk); });
-                        chunkTracker.chunkDictionary.Add(coord, chunk);
+                        tracker.chunkDictionary.Add(coord, chunk);
                     }
+
+                    else
+                    {
+                        tracker.chunkDictionary[coord].SetActive(true);
+                    }
+
+                    tracker.activeChunkCoords.Add(coord);
                 }
             }
         }
