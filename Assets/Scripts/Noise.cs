@@ -4,7 +4,6 @@ namespace Assets.Scripts
 {
     public static class Noise
     {
-        // Very random noise.
         public static float WhiteNoise2D(Vector2 value)
         {
             Vector2 sinValue = new(Mathf.Sin(value.x), Mathf.Sin(value.y));
