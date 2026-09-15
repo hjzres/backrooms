@@ -280,6 +280,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -3809945072200597350, guid: 0158d6c28aa820a4cabb5d177d9709c7, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 761d2dfa43b067b41a75bb54e4e36e1d, type: 2}
     - target: {fileID: 919132149155446097, guid: 0158d6c28aa820a4cabb5d177d9709c7, type: 3}
       propertyPath: m_Name
       value: The Hub
